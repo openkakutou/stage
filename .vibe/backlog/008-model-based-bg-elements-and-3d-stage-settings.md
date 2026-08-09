@@ -12,7 +12,9 @@ Extend the data model, parser, and serializer to cover Ikemen GO's 3D model-base
 - [ ] Whether `[Model]` is a single stage-wide section or repeatable like `[BG name]` is confirmed against at least one real Ikemen GO 3D stage `.def` file before committing to either shape — not assumed
 - [ ] `[Camera]`'s `Near`/`Far`/`fov`/`YShift` parse alongside the existing `ZoomOut`/`ZoomIn` fields, without disturbing 2D-only stages that omit them
 - [ ] A new `[Scaling]` type models `DepthToScreen`, `topz`/`botz`, `topscale`/`botscale`
-- [ ] `StageBoundaries` gains Z-axis fields sourced from `[PlayerInfo]` `topbound`/`botbound`; per-player `Startz` (P1-P8) is modeled as well
+- [ ] `StageBoundaries` gains Z-axis fields sourced from `[PlayerInfo]` `topbound`/`botbound` (one value per stage, same cardinality as the existing `Left`/`Right`)
+- [ ] Per-player `Startz` (P1-P8) is modeled in a separate type of its own (a per-player value, not a stage-wide one like `StageBoundaries` — do not bundle it into the same struct just because both are sourced from `[PlayerInfo]`)
+- [ ] Field/doc-comment naming keeps the new Z-axis `StageBoundaries` bound and the new `[Scaling]` type's `topz`/`botz` clearly distinct — both are Z-related but are different concepts (movement clamp vs. perspective-scaling range); avoid reusing bare `Top`/`Bottom` identifiers across the two types, and update `bounds.go`'s existing doc comment (currently: "no vertical (top/bottom) movement bound... see decision 001") so it no longer reads as contradicted by the new Z fields — decision 001's Left/Right-only ruling is about the Y axis and still stands; Z is a separate axis, per decision 001's own 2026-08-09 update
 - [ ] `Serialize`/`Document` round-trip the new sections/keys with the same guarantees item 003 already provides (fresh-write validity, comment/ordering-preserving byte-exact round trip for unmodified files)
 - [ ] A stage `.def` with none of these sections parses/serializes identically to its pre-item-008 behavior (zero-value defaults, fully backward compatible)
 - [ ] At least one real Ikemen GO 3D stage `.def` file is used to validate the field mapping, not invented from memory

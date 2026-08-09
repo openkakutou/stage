@@ -41,3 +41,12 @@ Left/Right.
   rejected: contradicts the acceptance criterion that the two remain
   distinct concepts (scroll limits vs. movement limits), and conflates two
   independent `.def` sections (`[Camera]` vs `[PlayerInfo]`).
+
+**Update (2026-08-09):** the deferred question above has been answered by
+the roadmap's `.vibe/decisions/014-support-ikemen-go-3d-stages.md` —
+Ikemen GO's `[PlayerInfo]` `topbound`/`botbound` (Z-axis character movement
+bound, verified real) is now scoped for this repo's backlog item `008`.
+This decision's own Left/Right-only ruling still stands as written above;
+014 only adds the previously-deferred Z axis alongside it, as a distinct
+concept from this decision's rejected Top/Bottom (which would have been a
+same-axis Y/vertical twin of Left/Right — Z is a different axis entirely).
