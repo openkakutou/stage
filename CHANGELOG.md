@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- MUGEN/Ikemen GO stage `.def` files can now be read into the stage data model: camera scroll limits, character movement limits, sprite sheet and coordinate-space settings, and every background layer (static, parallax, or animated), including Ikemen GO's tiling extension. Unrecognized sections and keys are tolerated rather than rejected, and a malformed file reports a clear, line-numbered error instead of crashing.
+
 ## [0.1.0] - 2026-08-09
 
 ### Added
