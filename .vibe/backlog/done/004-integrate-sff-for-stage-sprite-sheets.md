@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends_on: [001]
 ---
 # Integrate `sff` For Stage Sprite Sheets
