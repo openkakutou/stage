@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-20
+
 ### Added
 
 - Stage background layers can now resolve their sprite reference to real pixel data from a loaded `.sff` sprite sheet, working with either the older or newer `.sff` file format transparently. A layer referencing a sprite missing from the sheet is reported with a clear error instead of silently showing nothing.
@@ -29,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/openkakutou/stage/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/openkakutou/stage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/openkakutou/stage/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/openkakutou/stage/releases/tag/v0.1.0
