@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-19
+
 ### Added
 
 - Stages can now be written back out as MUGEN/Ikemen GO `.def` text, ready for a `stage-editor` save: a fresh-write path producing valid, readable output equivalent to the original data, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized sections byte-for-byte instead of overwriting them.
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/openkakutou/stage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/openkakutou/stage/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/openkakutou/stage/releases/tag/v0.1.0

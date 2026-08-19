@@ -119,6 +119,6 @@ if err := doc.Serialize(out); err != nil {
 <!-- vibe:end:usage -->
 
 <!-- vibe:begin:docs-index -->
-- [docs/api.md](docs/api.md) — the package's public functions, starting with `Parse`, and how they behave
+- [docs/api.md](docs/api.md) — the package's public functions — `Parse`, `Serialize`, `Document`/`ParseDocument` — and how they behave
 - [docs/data-model.md](docs/data-model.md) — the stage data types (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) and the exact `.def` file section/key each field maps to
 <!-- vibe:end:docs-index -->
