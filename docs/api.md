@@ -2,9 +2,10 @@
 
 # Public API
 
-The `stage` package (repo root) exposes a read path (`Parse`) and two
-write paths (`Serialize`, `Document`/`ParseDocument`), over the pure-data
-model documented in [docs/data-model.md](data-model.md).
+The `stage` package (repo root) exposes a read path (`Parse`), two write
+paths (`Serialize`, `Document`/`ParseDocument`), and a sprite-resolution
+path (`SpriteResolver`), over the pure-data model documented in
+[docs/data-model.md](data-model.md).
 
 ## `Parse`
 
@@ -111,3 +112,40 @@ section or key `Parse` doesn't recognize (e.g. `[Shadow]`, `[Reflection]`,
   malformed source, and a wrapped error if the underlying reader fails.
 - `Document.Serialize` returns a wrapped error if the underlying writer
   fails, never panics.
+
+## `SpriteResolver`
+
+```go
+func NewSpriteResolver(groups []sff.SpriteGroup) *SpriteResolver
+func (r *SpriteResolver) Resolve(ref SpriteRef) (sff.Sprite, error)
+```
+
+Resolves a `BGElement`'s `Sprite` reference (or any other `SpriteRef`,
+e.g. one derived from an `.air` animation frame — see backlog item 005)
+against a sprite sheet loaded via the external
+[`github.com/openkakutou/sff`](https://github.com/openkakutou/sff) module's
+`Load`. `sff.Sprite`/`sff.SpriteGroup` are already version-agnostic, so
+`SpriteResolver` works identically regardless of whether the sprite sheet
+was a `.sff` v1 or v2 file — no version-specific branching on this side.
+
+`NewSpriteResolver` indexes `groups` by `(Group, Image)` once, up front, so
+every later `Resolve` call is a direct lookup rather than a rescan. Passing
+`nil` or an empty slice is valid and produces a resolver for which every
+`Resolve` call returns an error.
+
+`Resolve` returns a descriptive error — never a silently zero-value
+`sff.Sprite` — when `ref` doesn't match any sprite in the loaded groups:
+
+```go
+resolver := stage.NewSpriteResolver(groups)
+sprite, err := resolver.Resolve(element.Sprite)
+if err != nil {
+	// e.g. "stage: BG element references sprite (group 9, image 3),
+	// which was not found in the loaded sprite groups"
+}
+```
+
+`SpriteResolver` takes a `SpriteRef` rather than a whole `BGElement`
+because only `BGElementNormal`/`BGElementParallax` elements carry a
+meaningful `Sprite` reference — see
+[`.vibe/decisions/002-sprite-resolver-takes-spriteref-not-bgelement.md`](../.vibe/decisions/002-sprite-resolver-takes-spriteref-not-bgelement.md).

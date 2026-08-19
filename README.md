@@ -10,10 +10,10 @@ Available now:
 - A data model for stage definitions: stage-level settings, BG elements/layers (static, parallax, and animated backgrounds), camera scroll limits, and character movement limits
 - Reading real MUGEN and Ikemen GO stage `.def` files into that model, including every background layer and Ikemen GO's tiling extension, with unrecognized content tolerated and malformed files reported with a clear, line-numbered error
 - Writing stage `.def` files back out: a fresh-write path for a stage built or edited in memory, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized content byte-for-byte instead of overwriting them
+- Resolving a BG element's sprite reference to real pixel data from a loaded sprite sheet, via [`sff`](https://github.com/openkakutou/sff), regardless of which `.sff` file version it came from
 
 Planned:
 
-- Resolving stage BG element sprite references against sprite sheets via [`sff`](https://github.com/openkakutou/sff)
 - Resolving parallax scroll deltas and animated background playback state
 - A WebAssembly build so web apps can load a stage without a Go toolchain
 <!-- vibe:end:features -->
@@ -115,6 +115,30 @@ defer out.Close()
 if err := doc.Serialize(out); err != nil {
 	panic(err)
 }
+```
+
+Resolving a BG element's sprite reference against sprite sheets loaded via [`sff`](https://github.com/openkakutou/sff):
+
+```go
+import "github.com/openkakutou/sff"
+
+f, err := os.Open("stage0.sff")
+if err != nil {
+	panic(err)
+}
+defer f.Close()
+
+groups, err := sff.Load(f)
+if err != nil {
+	panic(err)
+}
+
+resolver := stage.NewSpriteResolver(groups)
+sprite, err := resolver.Resolve(s.Elements[0].Sprite)
+if err != nil {
+	panic(err)
+}
+fmt.Printf("%+v\n", sprite)
 ```
 <!-- vibe:end:usage -->
 

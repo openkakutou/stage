@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stage background layers can now resolve their sprite reference to real pixel data from a loaded `.sff` sprite sheet, working with either the older or newer `.sff` file format transparently. A layer referencing a sprite missing from the sheet is reported with a clear error instead of silently showing nothing.
+
 ## [0.3.0] - 2026-08-19
 
 ### Added
