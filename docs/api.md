@@ -2,9 +2,9 @@
 
 # Public API
 
-The `stage` package (repo root) currently exposes one function on its
-read path, plus the pure-data model documented in
-[docs/data-model.md](data-model.md).
+The `stage` package (repo root) exposes a read path (`Parse`) and two
+write paths (`Serialize`, `Document`/`ParseDocument`), over the pure-data
+model documented in [docs/data-model.md](data-model.md).
 
 ## `Parse`
 
@@ -55,3 +55,59 @@ silently producing wrong data when:
 - a key expecting a number (or a `a,b` pair of numbers, e.g. `spriteno`,
   `start`, `delta`, `tile`, `tilespacing`) has a value that isn't one, or
 - the underlying reader itself fails.
+
+## `Serialize`
+
+```go
+func Serialize(w io.Writer, s Stage) error
+```
+
+Writes `s` to `w` as `.def` text: a `[BGDef]` section, a `[StageInfo]`
+section, a `[Camera]` section, a `[PlayerInfo]` section, then one
+`[BG <name>]` section per element, in slice order.
+
+This is a fresh-write path, not a byte-exact round trip of any original
+file's formatting, comments, or unrecognized sections — for that, see
+`Document` below. It only guarantees valid, readable output that `Parse`
+reads back into an equivalent `Stage`.
+
+- `BGdef.SpriteFile` is omitted from `[BGDef]` when empty. Every other
+  field is numeric and is always written — a zero value (e.g. `ZOffset`
+  `0`, an element's `Delta` `0,0`) is meaningful `.def` data, not an
+  "unset" sentinel.
+- A `BGElement`'s `Sprite` is written only for `BGElementNormal`/
+  `BGElementParallax`; its `ActionNumber` is written only for
+  `BGElementAnim` — mirroring which field `Parse` itself populates for
+  each `Type`.
+- Serializing a zero-value `Stage` produces valid, re-parseable output
+  (no elements, every numeric field written as `0`) rather than a
+  malformed or panic-inducing file.
+- Returns a wrapped error if the underlying writer fails, never panics.
+
+## `Document` / `ParseDocument`
+
+```go
+type Document struct {
+	Stage Stage
+	// unexported source bytes
+}
+
+func ParseDocument(r io.Reader) (*Document, error)
+func (d *Document) Serialize(w io.Writer) error
+```
+
+The format-preserving write path, mirroring `character`'s own
+`def.Document`: `ParseDocument` decodes `r` into `Document.Stage` the same
+way `Parse` does, while also retaining the exact source bytes. As long as
+`Document.Stage` is left untouched, `Serialize` reproduces the original
+source byte-for-byte — including comments, section ordering, and any
+section or key `Parse` doesn't recognize (e.g. `[Shadow]`, `[Reflection]`,
+`[Music]`).
+
+- Mutating `Document.Stage` after `ParseDocument` has no effect on
+  `Serialize`'s output — this type does not regenerate text around an
+  edit, only reproduce unmodified source.
+- `ParseDocument` returns the same line-numbered errors as `Parse` for
+  malformed source, and a wrapped error if the underlying reader fails.
+- `Document.Serialize` returns a wrapped error if the underlying writer
+  fails, never panics.

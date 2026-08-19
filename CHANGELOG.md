@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stages can now be written back out as MUGEN/Ikemen GO `.def` text, ready for a `stage-editor` save: a fresh-write path producing valid, readable output equivalent to the original data, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized sections byte-for-byte instead of overwriting them.
+
 ## [0.2.0] - 2026-08-18
 
 ### Added

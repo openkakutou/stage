@@ -69,3 +69,12 @@ The x-range characters may move within. No vertical fields — mainline MUGEN/Ik
 |---|---|---|
 | Left, Right | int | `[PlayerInfo]` `leftbound`/`rightbound` |
 Defined in: `bounds.go`
+
+## Document
+Write-path counterpart to `Parse`/`Serialize`: retains the exact source bytes `ParseDocument` read alongside the decoded data, so `Serialize` can reproduce an unmodified file byte-for-byte (comments, section ordering, unrecognized content included). Mutating `Stage` after parsing has no effect on `Serialize`'s output.
+
+| Field | Type | Notes |
+|---|---|---|
+| Stage | Stage | Decoded the same way `Parse`'s return value is |
+| source | []byte | Unexported; the raw bytes `Serialize` writes back verbatim |
+Defined in: `document.go`

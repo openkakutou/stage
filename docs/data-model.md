@@ -3,10 +3,10 @@
 # Data model
 
 The `stage` package (repo root) defines the pure-data, read-path model for a
-MUGEN/Ikemen GO stage: what a stage `.def` file describes. `Parse` (see
-[docs/api.md](api.md)) now populates it from real `.def` text; serialization
-back to `.def` is still planned (backlog item 003). Every field below cites
-the exact `.def` section and key it maps to.
+MUGEN/Ikemen GO stage: what a stage `.def` file describes. `Parse` reads it
+from real `.def` text; `Serialize`/`Document` write it back out (see
+[docs/api.md](api.md)). Every field below cites the exact `.def` section
+and key it maps to.
 
 A zero-value `Stage` is valid and immediately usable — no nil pointers, no
 panics on first access (e.g. ranging over a nil `Elements`).

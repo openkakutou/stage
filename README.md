@@ -3,16 +3,16 @@
 A read/write Go library for MUGEN/Ikemen GO stage (background) `.def` files — BGdef, BG elements/layers, camera bounds, and stage boundaries — built as part of the [OpenKakutou](https://github.com/openkakutou) project. No rendering dependency; compiles to WebAssembly.
 
 <!-- vibe:begin:features -->
-This project is in early-stage development — writing/exporting stage files isn't possible yet.
+This project is in early-stage development.
 
 Available now:
 
 - A data model for stage definitions: stage-level settings, BG elements/layers (static, parallax, and animated backgrounds), camera scroll limits, and character movement limits
 - Reading real MUGEN and Ikemen GO stage `.def` files into that model, including every background layer and Ikemen GO's tiling extension, with unrecognized content tolerated and malformed files reported with a clear, line-numbered error
+- Writing stage `.def` files back out: a fresh-write path for a stage built or edited in memory, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized content byte-for-byte instead of overwriting them
 
 Planned:
 
-- Writing stage `.def` files back out, with format-preserving round-trip serialization — the same guarantee `character` provides for its own `.def`/`.air`/`.cns` files
 - Resolving stage BG element sprite references against sprite sheets via [`sff`](https://github.com/openkakutou/sff)
 - Resolving parallax scroll deltas and animated background playback state
 - A WebAssembly build so web apps can load a stage without a Go toolchain
@@ -39,7 +39,7 @@ go get -u github.com/openkakutou/stage
 <!-- vibe:end:install -->
 
 <!-- vibe:begin:usage -->
-Writing real `.def` stage files back out isn't implemented yet — that API will be documented here as it lands. Reading one, though, works today:
+Reading a `.def` stage file into the data model:
 
 ```go
 package main
@@ -76,6 +76,44 @@ s := stage.Stage{
 	},
 	CameraBounds:    stage.CameraBounds{Left: -180, Right: 180, High: -240, Low: 0},
 	StageBoundaries: stage.StageBoundaries{Left: -1000, Right: 1000},
+}
+```
+
+Writing a `Stage` back out to `.def` text — for a stage built or edited in memory, without preserving any original file's formatting:
+
+```go
+f, err := os.Create("stage0.def")
+if err != nil {
+	panic(err)
+}
+defer f.Close()
+
+if err := stage.Serialize(f, s); err != nil {
+	panic(err)
+}
+```
+
+Editing an existing file while preserving everything about it you didn't change — comments, section ordering, unrecognized sections — as long as the parsed `Stage` itself is left untouched:
+
+```go
+f, err := os.Open("stage0.def")
+if err != nil {
+	panic(err)
+}
+doc, err := stage.ParseDocument(f)
+f.Close()
+if err != nil {
+	panic(err)
+}
+
+out, err := os.Create("stage0.def")
+if err != nil {
+	panic(err)
+}
+defer out.Close()
+
+if err := doc.Serialize(out); err != nil {
+	panic(err)
 }
 ```
 <!-- vibe:end:usage -->
