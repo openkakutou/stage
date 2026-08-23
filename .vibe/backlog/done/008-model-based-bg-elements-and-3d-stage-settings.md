@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: done
 depends_on: [003]
 ---
 # Model-Based BG Elements And 3D Stage Settings (Ikemen GO)
