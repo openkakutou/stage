@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-23
+
 ### Added
 
 - Stages can now use Ikemen GO's 3D model-based extension: a stage can reference a 3D model file with its own placement, scaling, and lighting settings, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions. A stage that doesn't use any of this reads and writes exactly as before.
@@ -35,7 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/openkakutou/stage/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/openkakutou/stage/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/openkakutou/stage/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/openkakutou/stage/compare/v0.1.0...v0.2.0
