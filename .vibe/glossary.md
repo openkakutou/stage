@@ -15,10 +15,20 @@ The box the camera's own scroll position is clamped to as it follows the charact
 _Sources: `bounds.go`_
 
 ## Stage boundaries
-The horizontal range characters are allowed to move within during a match — distinct from Camera bounds, which clamp the camera instead. Only a left/right range is defined; the format has no vertical counterpart.
-**Do not confuse with:** Camera bounds.
+The range characters are allowed to move within during a match — distinct from Camera bounds, which clamp the camera instead. A left/right (horizontal) range is always defined; a model-based stage additionally defines a top/bottom (depth) range. No vertical (up/down) counterpart exists in the format.
+**Do not confuse with:** Camera bounds, Perspective scaling.
 _Sources: `bounds.go`, `.vibe/decisions/001-stage-boundaries-model-left-right-only.md`_
 
 ## Local coordinate space
 The pixel coordinate system a stage's positions (BG element placement, ground level) are expressed in, independent of the actual resolution the stage is rendered at.
 _Sources: `bgdef.go`_
+
+## Model-based stage
+A stage rendered from a 3D model instead of 2D sprite layers — Ikemen GO's 3D stage extension. Identified by whether the stage references a model file at all; a stage with none is a traditional 2D (sprite-based) stage and every 3D-only setting stays unused.
+**Do not confuse with:** BG element, which is a 2D stage's own layer concept.
+_Sources: `bgdef.go`, `model.go`_
+
+## Perspective scaling
+How a character's on-screen size and vertical screen offset change with their depth (Z) position on a model-based stage — the illusion that a character farther from the camera appears smaller and higher on screen.
+**Do not confuse with:** Stage boundaries, which clamp where a character may move, not how it is drawn once there.
+_Sources: `scaling.go`_

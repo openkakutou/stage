@@ -176,6 +176,81 @@ func TestSerialize_NormalElement_OmitsActionNoWritesSpriteNo(t *testing.T) {
 	}
 }
 
+func TestSerialize_ModelStage_WritesThreeDSectionsAndRoundTrips(t *testing.T) {
+	s := Stage{
+		BGdef: BGdef{
+			SpriteFile: "stage0.sff",
+			ModelFile:  "stage3d.glb",
+			Near:       1, Far: 10000, FOV: 40, YShift: 0.5,
+		},
+		Model: Model{
+			OffsetX: 0, OffsetY: -0.25, OffsetZ: -1,
+			ScaleX: 0.5, ScaleY: 0.5, ScaleZ: 0.5,
+			Environment:          "stage.hdr",
+			EnvironmentIntensity: 1.2,
+		},
+		Scaling:         Scaling{DepthToScreen: 0.5, TopZ: 0, BottomZ: 50, TopScale: 1, BottomScale: 1.2},
+		StageBoundaries: StageBoundaries{Left: -1000, Right: 1000, TopBound: -50, BottomBound: 50},
+		PlayerStartZ:    PlayerStartZ{P1: -10, P2: 10},
+	}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "[Model]") {
+		t.Errorf("expected a [Model] section in output, got:\n%s", output)
+	}
+	if !strings.Contains(output, "[Scaling]") {
+		t.Errorf("expected a [Scaling] section in output, got:\n%s", output)
+	}
+
+	got, err := Parse(strings.NewReader(output))
+	if err != nil {
+		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, output)
+	}
+	if got.BGdef != s.BGdef {
+		t.Errorf("BGdef: expected %+v, got %+v", s.BGdef, got.BGdef)
+	}
+	if got.Model != s.Model {
+		t.Errorf("Model: expected %+v, got %+v", s.Model, got.Model)
+	}
+	if got.Scaling != s.Scaling {
+		t.Errorf("Scaling: expected %+v, got %+v", s.Scaling, got.Scaling)
+	}
+	if got.StageBoundaries != s.StageBoundaries {
+		t.Errorf("StageBoundaries: expected %+v, got %+v", s.StageBoundaries, got.StageBoundaries)
+	}
+	if got.PlayerStartZ != s.PlayerStartZ {
+		t.Errorf("PlayerStartZ: expected %+v, got %+v", s.PlayerStartZ, got.PlayerStartZ)
+	}
+}
+
+func TestSerialize_NonModelStage_OmitsAllThreeDOutput(t *testing.T) {
+	// A stage with no model file is a 2D stage: its output must stay
+	// byte-for-byte what item 008 found before this feature existed, so an
+	// existing 2D stage-editor save never gains an unrequested [Model]/
+	// [Scaling] section or new Camera/PlayerInfo keys.
+	s := Stage{
+		BGdef:           BGdef{SpriteFile: "stage0.sff", LocalCoordWidth: 320, LocalCoordHeight: 240},
+		CameraBounds:    CameraBounds{Left: -180, Right: 180},
+		StageBoundaries: StageBoundaries{Left: -1000, Right: 1000},
+	}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+
+	for _, unwanted := range []string{"[Model]", "[Scaling]", "model =", "near =", "far =", "fov =", "yshift =", "topbound", "botbound", "startz"} {
+		if strings.Contains(strings.ToLower(output), strings.ToLower(unwanted)) {
+			t.Errorf("expected a non-model stage to omit %q from output, got:\n%s", unwanted, output)
+		}
+	}
+}
+
 func TestSerialize_WriterError_ReturnsError(t *testing.T) {
 	s := Stage{BGdef: BGdef{SpriteFile: "stage0.sff"}}
 

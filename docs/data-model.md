@@ -22,7 +22,10 @@ defines.
 | `BGdef` | `BGdef` | Stage-level settings (sprite sheet, coordinate space, ground level, camera zoom range) |
 | `Elements` | `[]BGElement` | BG elements/layers, in `.def` file order |
 | `CameraBounds` | `CameraBounds` | The box the camera's own position is clamped to |
-| `StageBoundaries` | `StageBoundaries` | The x-range characters are allowed to move within |
+| `StageBoundaries` | `StageBoundaries` | The x-range (and, for a model-based stage, z-range) characters are allowed to move within |
+| `Model` | `Model` | 3D model placement/lighting settings (Ikemen GO extension, zero-valued unless `BGdef.ModelFile` is set) |
+| `Scaling` | `Scaling` | 3D perspective-scaling settings (Ikemen GO extension, zero-valued unless `BGdef.ModelFile` is set) |
+| `PlayerStartZ` | `PlayerStartZ` | Each player's starting depth (Z) position (Ikemen GO extension, zero-valued unless `BGdef.ModelFile` is set) |
 
 ## `BGdef`
 
@@ -35,6 +38,8 @@ Stage-level settings, sourced from the `.def` `[BGDef]`, `[StageInfo]`, and
 | `LocalCoordWidth`, `LocalCoordHeight` | `[StageInfo]` `localcoord` | Coordinate space element positions are expressed in |
 | `ZOffset` | `[StageInfo]` `zoffset` | Ground level's vertical distance from the top of the local coordinate space |
 | `ZoomOut`, `ZoomIn` | `[Camera]` `zoomout`/`zoomin` | Camera's zoom scale range |
+| `ModelFile` | `[BGDef]` `model` | Path to the stage's 3D model file (`.gltf`/`.glb`) — Ikemen GO extension, empty for a 2D stage |
+| `Near`, `Far`, `FOV`, `YShift` | `[Camera]` `near`/`far`/`fov`/`yshift` | 3D-only camera settings applied when rendering a model-based stage |
 
 ## `BGElement`
 
@@ -66,12 +71,69 @@ them up is a compile error rather than a silent bug:
 | Type | `.def` section | Constrains | Fields |
 |---|---|---|---|
 | `CameraBounds` | `[Camera]` `boundleft`/`boundright`/`boundhigh`/`boundlow` | The camera's own scroll position | `Left`, `Right`, `High`, `Low` |
-| `StageBoundaries` | `[PlayerInfo]` `leftbound`/`rightbound` | Where characters may move (x-axis only) | `Left`, `Right` |
+| `StageBoundaries` | `[PlayerInfo]` `leftbound`/`rightbound`/`topbound`/`botbound` | Where characters may move (x-axis, and z-axis on a model-based stage) | `Left`, `Right`, `TopBound`, `BottomBound` |
 
-`StageBoundaries` intentionally has no vertical (top/bottom) fields:
-mainline MUGEN/Ikemen GO defines no vertical movement bound for characters.
-See `.vibe/decisions/001-stage-boundaries-model-left-right-only.md` for the
-full reasoning.
+`StageBoundaries` intentionally has no vertical (top/bottom, y-axis) movement
+fields: mainline MUGEN/Ikemen GO defines no vertical movement bound for
+characters. `TopBound`/`BottomBound` are a separate, later addition — the
+z-axis (depth) extension for model-based stages. See
+`.vibe/decisions/001-stage-boundaries-model-left-right-only.md` for the full
+reasoning on both.
+
+## 3D stage extension (Ikemen GO)
+
+`Model`, `Scaling`, and `PlayerStartZ` model Ikemen GO's 3D model-based
+stage format — see the roadmap's `.vibe/decisions/014`. All three (plus
+`BGdef.ModelFile`/`Near`/`Far`/`FOV`/`YShift` and `StageBoundaries.TopBound`/
+`BottomBound` above) stay at their zero value for a traditional 2D stage,
+and `Serialize` omits every one of them from its output unless
+`BGdef.ModelFile` is set — see [docs/api.md](api.md).
+
+Field/key names and shapes are verified against Ikemen GO's own source
+(`src/stage.go`), not assumed from the `.def` format's 2D documentation
+alone — notably, the model file path itself lives in `[BGDef]`'s `model`
+key, not inside `[Model]`, and `[Model]` is a single stage-wide section,
+never one per named mesh the way `[BG <name>]` is per layer.
+
+### `Model`
+
+3D model placement and lighting, from the `.def` `[Model]` section:
+
+| Field | `.def` origin | Meaning |
+|---|---|---|
+| `OffsetX`, `OffsetY`, `OffsetZ` | `offset` | The model's placement origin in the 3D scene |
+| `ScaleX`, `ScaleY`, `ScaleZ` | `scale` | The model's scale on each axis |
+| `Environment` | `environment` | Path to an `.hdr` file used for image-based lighting |
+| `EnvironmentIntensity` | `environmentintensity` | How strongly `Environment`'s lighting affects the model |
+
+### `Scaling`
+
+3D perspective scaling, from the `.def` `[Scaling]` section — how a
+character's on-screen size and vertical offset change with depth (Z)
+position:
+
+| Field | `.def` origin | Meaning |
+|---|---|---|
+| `DepthToScreen` | `depthtoscreen` | How a player's Z position affects their Y offset on screen |
+| `TopZ`, `BottomZ` | `topz`/`botz` | The Z-space reference points `TopScale`/`BottomScale` apply at |
+| `TopScale`, `BottomScale` | `topscale`/`botscale` | The on-screen scale factors at `TopZ`/`BottomZ`, interpolated in between |
+
+`TopZ`/`BottomZ` are a different concept from `StageBoundaries.TopBound`/
+`BottomBound` — perspective-scaling anchor points, not a movement clamp —
+named to stay clearly distinct from them despite both being Z-related.
+
+### `PlayerStartZ`
+
+Each of up to 8 players' starting depth (Z) position, from the `.def`
+`[PlayerInfo]` `p1startz`..`p8startz` keys:
+
+| Field | `.def` origin |
+|---|---|
+| `P1`..`P8` | `p1startz`..`p8startz` |
+
+Kept as its own type rather than folded into `StageBoundaries`, even though
+both are sourced from `[PlayerInfo]`: it is a genuinely per-player value,
+not one pair of clamps shared by every character.
 
 ## JSON shape
 

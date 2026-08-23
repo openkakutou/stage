@@ -29,4 +29,17 @@ type BGdef struct {
 	// ZoomIn is the camera's maximum zoom-in scale factor, e.g. 1.5 means
 	// the camera can enlarge the view to 150% (.def [Camera] "zoomin").
 	ZoomIn float64 `json:"zoomIn"`
+	// ModelFile is the path to this stage's 3D model file (.gltf/.glb),
+	// Ikemen GO's 3D stage extension (.def [BGDef] "model"). Empty for a
+	// traditional 2D sprite-based stage, mirroring how SpriteFile is the
+	// analogous reference for a 2D stage's sprite sheet.
+	ModelFile string `json:"modelFile"`
+	// Near, Far, FOV, and YShift are 3D-only camera settings applied when
+	// rendering a model-based stage, alongside the existing ZoomOut/ZoomIn
+	// (.def [Camera] "near"/"far"/"fov"/"yshift"). Zero-valued (unused) for
+	// a traditional 2D stage.
+	Near   float64 `json:"near"`
+	Far    float64 `json:"far"`
+	FOV    float64 `json:"fov"`
+	YShift float64 `json:"yShift"`
 }

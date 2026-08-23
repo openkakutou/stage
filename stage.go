@@ -21,7 +21,19 @@ type Stage struct {
 	Elements []BGElement `json:"elements"`
 	// CameraBounds is the box the camera's own position is clamped to.
 	CameraBounds CameraBounds `json:"cameraBounds"`
-	// StageBoundaries is the x-range characters are allowed to move
-	// within, distinct from CameraBounds.
+	// StageBoundaries is the x-range (and, for a model-based stage,
+	// z-range) characters are allowed to move within, distinct from
+	// CameraBounds.
 	StageBoundaries StageBoundaries `json:"stageBoundaries"`
+	// Model is this stage's 3D model placement/lighting settings, Ikemen
+	// GO's 3D stage extension. Zero-valued (unused) unless BGdef.ModelFile
+	// names a model file.
+	Model Model `json:"model"`
+	// Scaling is this stage's 3D perspective-scaling settings. Zero-valued
+	// (unused) unless BGdef.ModelFile names a model file.
+	Scaling Scaling `json:"scaling"`
+	// PlayerStartZ holds each player's starting depth (Z) position on a
+	// model-based stage. Zero-valued (unused) unless BGdef.ModelFile names
+	// a model file.
+	PlayerStartZ PlayerStartZ `json:"playerStartZ"`
 }

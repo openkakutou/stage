@@ -195,6 +195,202 @@ func TestParse_EmptyInput_ReturnsZeroValueStageAndNoError(t *testing.T) {
 	}
 }
 
+func TestParse_IkemenGoThreeDStageSample_PopulatesModelCameraScalingAndZAxisFields(t *testing.T) {
+	// Field/key names and shapes verified against Ikemen GO's own source
+	// (github.com/ikemen-engine/Ikemen-GO src/stage.go, 2026-08): the model
+	// file path lives in [BGdef]'s own "model" key (mirroring "spr"), never
+	// inside [Model] itself; [Model] is read as a single stage-wide block,
+	// not a repeatable "[Model name]" section; topbound/botbound and every
+	// [Scaling] key are read as floats, not integers.
+	src := `[BGDef]
+spr = stage0.sff
+model = stage3d.glb
+
+[Model]
+offset = 0,-0.25,-1
+scale = 0.5,0.5,0.5
+environment = stage.hdr
+environmentintensity = 1.2
+
+[StageInfo]
+localcoord = 320,240
+zoffset = 220
+
+[Camera]
+boundleft = -180
+boundright = 180
+boundhigh = -240
+boundlow = 0
+zoomout = 0.75
+zoomin = 1.5
+near = 1
+far = 10000
+fov = 40
+yshift = 0.5
+
+[Scaling]
+depthtoscreen = 0.5
+topz = 0
+botz = 50
+topscale = 1
+botscale = 1.2
+
+[PlayerInfo]
+leftbound = -1000
+rightbound = 1000
+topbound = -50
+botbound = 50
+p1startz = -10
+p2startz = 10
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if s.BGdef.ModelFile != "stage3d.glb" {
+		t.Errorf("expected BGdef.ModelFile %q, got %q", "stage3d.glb", s.BGdef.ModelFile)
+	}
+	if s.BGdef.Near != 1 || s.BGdef.Far != 10000 || s.BGdef.FOV != 40 || s.BGdef.YShift != 0.5 {
+		t.Errorf("expected BGdef Near/Far/FOV/YShift 1/10000/40/0.5, got %v/%v/%v/%v", s.BGdef.Near, s.BGdef.Far, s.BGdef.FOV, s.BGdef.YShift)
+	}
+
+	wantModel := Model{
+		OffsetX: 0, OffsetY: -0.25, OffsetZ: -1,
+		ScaleX: 0.5, ScaleY: 0.5, ScaleZ: 0.5,
+		Environment:          "stage.hdr",
+		EnvironmentIntensity: 1.2,
+	}
+	if s.Model != wantModel {
+		t.Errorf("expected Model %+v, got %+v", wantModel, s.Model)
+	}
+
+	wantScaling := Scaling{DepthToScreen: 0.5, TopZ: 0, BottomZ: 50, TopScale: 1, BottomScale: 1.2}
+	if s.Scaling != wantScaling {
+		t.Errorf("expected Scaling %+v, got %+v", wantScaling, s.Scaling)
+	}
+
+	if s.StageBoundaries.TopBound != -50 || s.StageBoundaries.BottomBound != 50 {
+		t.Errorf("expected StageBoundaries TopBound/BottomBound -50/50, got %v/%v", s.StageBoundaries.TopBound, s.StageBoundaries.BottomBound)
+	}
+	wantStartZ := PlayerStartZ{P1: -10, P2: 10}
+	if s.PlayerStartZ != wantStartZ {
+		t.Errorf("expected PlayerStartZ %+v, got %+v", wantStartZ, s.PlayerStartZ)
+	}
+}
+
+func TestParse_TwoDOnlyStage_LeavesThreeDFieldsAtZeroValue(t *testing.T) {
+	src := `[BGDef]
+spr = stage0.sff
+
+[Camera]
+boundleft = -100
+boundright = 100
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.BGdef.ModelFile != "" {
+		t.Errorf("expected empty ModelFile for a 2D-only stage, got %q", s.BGdef.ModelFile)
+	}
+	if s.Model != (Model{}) || s.Scaling != (Scaling{}) || s.PlayerStartZ != (PlayerStartZ{}) {
+		t.Errorf("expected zero-value Model/Scaling/PlayerStartZ for a 2D-only stage, got %+v / %+v / %+v", s.Model, s.Scaling, s.PlayerStartZ)
+	}
+	if s.StageBoundaries.TopBound != 0 || s.StageBoundaries.BottomBound != 0 {
+		t.Errorf("expected zero-value TopBound/BottomBound for a 2D-only stage, got %v/%v", s.StageBoundaries.TopBound, s.StageBoundaries.BottomBound)
+	}
+}
+
+func TestParse_AllEightPlayerStartZKeys_PopulateDistinctFields(t *testing.T) {
+	src := `[PlayerInfo]
+p1startz = 1
+p2startz = 2
+p3startz = 3
+p4startz = 4
+p5startz = 5
+p6startz = 6
+p7startz = 7
+p8startz = 8
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := PlayerStartZ{P1: 1, P2: 2, P3: 3, P4: 4, P5: 5, P6: 6, P7: 7, P8: 8}
+	if s.PlayerStartZ != want {
+		t.Errorf("expected PlayerStartZ %+v, got %+v", want, s.PlayerStartZ)
+	}
+}
+
+func TestParse_InvalidModelOffset_ReturnsLineNumberedError(t *testing.T) {
+	src := `[Model]
+offset = notatriple
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a malformed offset triple")
+	}
+	if !strings.Contains(err.Error(), "line 2") {
+		t.Errorf("expected the error to name line 2, got: %v", err)
+	}
+}
+
+func TestParse_InvalidScalingValue_ReturnsLineNumberedError(t *testing.T) {
+	src := `[Scaling]
+topz = notafloat
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric topz value")
+	}
+	if !strings.Contains(err.Error(), "line 2") {
+		t.Errorf("expected the error to name line 2, got: %v", err)
+	}
+}
+
+func TestParse_InvalidTopBoundValue_ReturnsLineNumberedError(t *testing.T) {
+	src := `[PlayerInfo]
+topbound = notafloat
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric topbound value")
+	}
+	if !strings.Contains(err.Error(), "line 2") {
+		t.Errorf("expected the error to name line 2, got: %v", err)
+	}
+}
+
+func TestParse_InvalidPlayerStartZValue_ReturnsLineNumberedError(t *testing.T) {
+	src := `[PlayerInfo]
+p1startz = notanumber
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric p1startz value")
+	}
+	if !strings.Contains(err.Error(), "line 2") {
+		t.Errorf("expected the error to name line 2, got: %v", err)
+	}
+}
+
+func TestParse_InvalidCameraThreeDKeyValue_ReturnsLineNumberedError(t *testing.T) {
+	src := `[Camera]
+fov = notafloat
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric fov value")
+	}
+	if !strings.Contains(err.Error(), "line 2") {
+		t.Errorf("expected the error to name line 2, got: %v", err)
+	}
+}
+
 func TestParse_MalformedSectionHeader_ReturnsLineNumberedError(t *testing.T) {
 	src := `[Camera]
 boundleft = -10

@@ -20,6 +20,12 @@ func TestBGdef_ZeroValue_AllFieldsZero(t *testing.T) {
 	if b.ZoomIn != 0 {
 		t.Errorf("expected zero-value BGdef to have ZoomIn 0, got %v", b.ZoomIn)
 	}
+	if b.ModelFile != "" {
+		t.Errorf("expected zero-value BGdef to have empty ModelFile, got %q", b.ModelFile)
+	}
+	if b.Near != 0 || b.Far != 0 || b.FOV != 0 || b.YShift != 0 {
+		t.Errorf("expected zero-value BGdef to have Near/Far/FOV/YShift all 0, got %v/%v/%v/%v", b.Near, b.Far, b.FOV, b.YShift)
+	}
 }
 
 func TestBGdef_WithValues_PreservesAssignedFieldValues(t *testing.T) {
@@ -30,6 +36,11 @@ func TestBGdef_WithValues_PreservesAssignedFieldValues(t *testing.T) {
 		ZOffset:          220,
 		ZoomOut:          0.75,
 		ZoomIn:           1.5,
+		ModelFile:        "stage3d.glb",
+		Near:             1,
+		Far:              10000,
+		FOV:              40,
+		YShift:           0.5,
 	}
 
 	if b.SpriteFile != "stage0.sff" {
@@ -49,5 +60,11 @@ func TestBGdef_WithValues_PreservesAssignedFieldValues(t *testing.T) {
 	}
 	if b.ZoomIn != 1.5 {
 		t.Errorf("expected ZoomIn 1.5, got %v", b.ZoomIn)
+	}
+	if b.ModelFile != "stage3d.glb" {
+		t.Errorf("expected ModelFile %q, got %q", "stage3d.glb", b.ModelFile)
+	}
+	if b.Near != 1 || b.Far != 10000 || b.FOV != 40 || b.YShift != 0.5 {
+		t.Errorf("expected Near/Far/FOV/YShift 1/10000/40/0.5, got %v/%v/%v/%v", b.Near, b.Far, b.FOV, b.YShift)
 	}
 }

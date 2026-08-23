@@ -20,6 +20,15 @@ func TestStage_ZeroValue_IsUsableWithNoElements(t *testing.T) {
 	if s.StageBoundaries != (StageBoundaries{}) {
 		t.Errorf("expected zero-value Stage to have zero StageBoundaries, got %+v", s.StageBoundaries)
 	}
+	if s.Model != (Model{}) {
+		t.Errorf("expected zero-value Stage to have zero Model, got %+v", s.Model)
+	}
+	if s.Scaling != (Scaling{}) {
+		t.Errorf("expected zero-value Stage to have zero Scaling, got %+v", s.Scaling)
+	}
+	if s.PlayerStartZ != (PlayerStartZ{}) {
+		t.Errorf("expected zero-value Stage to have zero PlayerStartZ, got %+v", s.PlayerStartZ)
+	}
 
 	// Ranging over a nil Elements slice must not panic — a zero-value
 	// Stage has to be usable on first access, not just constructible.
@@ -64,6 +73,37 @@ func TestStage_WithValues_ComposesAllFourConcepts(t *testing.T) {
 	// conflated into one": a bug that aliased them would make this fail.
 	if s.CameraBounds.Left == s.StageBoundaries.Left {
 		t.Errorf("expected CameraBounds.Left (%d) and StageBoundaries.Left (%d) to be independently set, got equal values by coincidence of a shared field", s.CameraBounds.Left, s.StageBoundaries.Left)
+	}
+}
+
+func TestStage_WithModelSettings_ComposesThreeDConcepts(t *testing.T) {
+	s := Stage{
+		BGdef: BGdef{ModelFile: "stage3d.glb", Near: 1, Far: 10000, FOV: 40, YShift: 0.5},
+		Model: Model{
+			OffsetX: 0, OffsetY: -0.25, OffsetZ: -1,
+			ScaleX: 0.5, ScaleY: 0.5, ScaleZ: 0.5,
+			Environment:          "stage.hdr",
+			EnvironmentIntensity: 1.2,
+		},
+		Scaling:         Scaling{DepthToScreen: 0.5, TopZ: 0, BottomZ: 50, TopScale: 1, BottomScale: 1.2},
+		StageBoundaries: StageBoundaries{Left: -1000, Right: 1000, TopBound: -50, BottomBound: 50},
+		PlayerStartZ:    PlayerStartZ{P1: -10, P2: 10},
+	}
+
+	if s.BGdef.ModelFile != "stage3d.glb" {
+		t.Errorf("expected BGdef.ModelFile %q, got %q", "stage3d.glb", s.BGdef.ModelFile)
+	}
+	if s.Model.Environment != "stage.hdr" {
+		t.Errorf("expected Model.Environment %q, got %q", "stage.hdr", s.Model.Environment)
+	}
+	if s.Scaling.BottomScale != 1.2 {
+		t.Errorf("expected Scaling.BottomScale 1.2, got %v", s.Scaling.BottomScale)
+	}
+	if s.StageBoundaries.TopBound != -50 || s.StageBoundaries.BottomBound != 50 {
+		t.Errorf("expected StageBoundaries TopBound/BottomBound -50/50, got %v/%v", s.StageBoundaries.TopBound, s.StageBoundaries.BottomBound)
+	}
+	if s.PlayerStartZ.P1 != -10 || s.PlayerStartZ.P2 != 10 {
+		t.Errorf("expected PlayerStartZ P1/P2 -10/10, got %d/%d", s.PlayerStartZ.P1, s.PlayerStartZ.P2)
 	}
 }
 

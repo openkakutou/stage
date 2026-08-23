@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stages can now use Ikemen GO's 3D model-based extension: a stage can reference a 3D model file with its own placement, scaling, and lighting settings, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions. A stage that doesn't use any of this reads and writes exactly as before.
+
 ## [0.4.0] - 2026-08-20
 
 ### Added

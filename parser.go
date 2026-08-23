@@ -12,10 +12,15 @@ import (
 // it describes.
 //
 // Only sections this data model has a place for are recognized:
-// "[BGDef]" (BGdef.SpriteFile), "[StageInfo]" (BGdef's local coordinate
-// space and ground level), "[Camera]" (CameraBounds plus BGdef's zoom
-// range), "[PlayerInfo]" (StageBoundaries), and one "[BG <name>]" section
-// per background element (matched case-insensitively). Any other section —
+// "[BGDef]" (BGdef.SpriteFile plus, for a model-based stage, its
+// ModelFile), "[StageInfo]" (BGdef's local coordinate space and ground
+// level), "[Camera]" (CameraBounds plus BGdef's zoom range and, for a
+// model-based stage, its Near/Far/FOV/YShift), "[PlayerInfo]"
+// (StageBoundaries, plus its z-axis extension and PlayerStartZ for a
+// model-based stage), "[Model]" and "[Scaling]" (Ikemen GO's 3D stage
+// extension, see the roadmap's .vibe/decisions/014), and one
+// "[BG <name>]" section per background element (matched
+// case-insensitively). Any other section —
 // including "[Info]", "[Bound]", "[Shadow]", "[Reflection]", "[Music]" —
 // carries nothing this model represents, so its lines are skipped without
 // validation, the same way def.Parse/cns.Parse in the character repo skip
@@ -83,8 +88,11 @@ func Parse(r io.Reader) (Stage, error) {
 
 		switch currentSection {
 		case "bgdef":
-			if strings.EqualFold(key, "spr") {
+			switch {
+			case strings.EqualFold(key, "spr"):
 				stage.BGdef.SpriteFile = value
+			case strings.EqualFold(key, "model"):
+				stage.BGdef.ModelFile = value
 			}
 		case "stageinfo":
 			switch {
@@ -106,25 +114,22 @@ func Parse(r io.Reader) (Stage, error) {
 				return Stage{}, err
 			}
 		case "playerinfo":
-			switch {
-			case strings.EqualFold(key, "leftbound"):
-				n, err := strconv.Atoi(strings.TrimSpace(value))
-				if err != nil {
-					return Stage{}, fmt.Errorf("stage: line %d: invalid leftbound %q: %w", lineNumber, value, err)
-				}
-				stage.StageBoundaries.Left = n
-			case strings.EqualFold(key, "rightbound"):
-				n, err := strconv.Atoi(strings.TrimSpace(value))
-				if err != nil {
-					return Stage{}, fmt.Errorf("stage: line %d: invalid rightbound %q: %w", lineNumber, value, err)
-				}
-				stage.StageBoundaries.Right = n
+			if err := parsePlayerInfoKey(&stage, key, value, lineNumber); err != nil {
+				return Stage{}, err
 			}
 		case "bg":
 			if current == nil {
 				continue
 			}
 			if err := parseBGElementKey(current, key, value, lineNumber); err != nil {
+				return Stage{}, err
+			}
+		case "model":
+			if err := parseModelKey(&stage.Model, key, value, lineNumber); err != nil {
+				return Stage{}, err
+			}
+		case "scaling":
+			if err := parseScalingKey(&stage.Scaling, key, value, lineNumber); err != nil {
 				return Stage{}, err
 			}
 		}
@@ -214,6 +219,132 @@ func parseCameraKey(stage *Stage, key, value string, lineNumber int) error {
 			return fmt.Errorf("stage: line %d: invalid zoomin %q: %w", lineNumber, value, err)
 		}
 		stage.BGdef.ZoomIn = f
+	case strings.EqualFold(key, "near"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid near %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.Near = f
+	case strings.EqualFold(key, "far"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid far %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.Far = f
+	case strings.EqualFold(key, "fov"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid fov %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.FOV = f
+	case strings.EqualFold(key, "yshift"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid yshift %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.YShift = f
+	}
+	return nil
+}
+
+// parsePlayerInfoKey applies a single "[PlayerInfo]" section key=value pair
+// to stage's StageBoundaries and PlayerStartZ fields.
+func parsePlayerInfoKey(stage *Stage, key, value string, lineNumber int) error {
+	switch {
+	case strings.EqualFold(key, "leftbound"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid leftbound %q: %w", lineNumber, value, err)
+		}
+		stage.StageBoundaries.Left = n
+	case strings.EqualFold(key, "rightbound"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid rightbound %q: %w", lineNumber, value, err)
+		}
+		stage.StageBoundaries.Right = n
+	case strings.EqualFold(key, "topbound"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid topbound %q: %w", lineNumber, value, err)
+		}
+		stage.StageBoundaries.TopBound = f
+	case strings.EqualFold(key, "botbound"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid botbound %q: %w", lineNumber, value, err)
+		}
+		stage.StageBoundaries.BottomBound = f
+	default:
+		if field := playerStartZField(&stage.PlayerStartZ, key); field != nil {
+			n, err := strconv.Atoi(strings.TrimSpace(value))
+			if err != nil {
+				return fmt.Errorf("stage: line %d: invalid %s %q: %w", lineNumber, key, value, err)
+			}
+			*field = n
+		}
+	}
+	return nil
+}
+
+// playerStartZField returns a pointer to the field of p that key names
+// ("p1startz" through "p8startz"), case-insensitively, or nil if key names
+// none of them.
+func playerStartZField(p *PlayerStartZ, key string) *int {
+	fields := [8]*int{&p.P1, &p.P2, &p.P3, &p.P4, &p.P5, &p.P6, &p.P7, &p.P8}
+	for i, f := range fields {
+		if strings.EqualFold(key, fmt.Sprintf("p%dstartz", i+1)) {
+			return f
+		}
+	}
+	return nil
+}
+
+// parseModelKey applies a single "[Model]" section key=value pair to m.
+func parseModelKey(m *Model, key, value string, lineNumber int) error {
+	switch {
+	case strings.EqualFold(key, "offset"):
+		x, y, z, err := parseFloatTriple(value)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid offset %q: %w", lineNumber, value, err)
+		}
+		m.OffsetX, m.OffsetY, m.OffsetZ = x, y, z
+	case strings.EqualFold(key, "scale"):
+		x, y, z, err := parseFloatTriple(value)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid scale %q: %w", lineNumber, value, err)
+		}
+		m.ScaleX, m.ScaleY, m.ScaleZ = x, y, z
+	case strings.EqualFold(key, "environment"):
+		m.Environment = value
+	case strings.EqualFold(key, "environmentintensity"):
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid environmentintensity %q: %w", lineNumber, value, err)
+		}
+		m.EnvironmentIntensity = f
+	}
+	return nil
+}
+
+// parseScalingKey applies a single "[Scaling]" section key=value pair to sc.
+func parseScalingKey(sc *Scaling, key, value string, lineNumber int) error {
+	target := map[string]*float64{
+		"depthtoscreen": &sc.DepthToScreen,
+		"topz":          &sc.TopZ,
+		"botz":          &sc.BottomZ,
+		"topscale":      &sc.TopScale,
+		"botscale":      &sc.BottomScale,
+	}
+	for k, field := range target {
+		if strings.EqualFold(key, k) {
+			f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			if err != nil {
+				return fmt.Errorf("stage: line %d: invalid %s %q: %w", lineNumber, key, value, err)
+			}
+			*field = f
+			return nil
+		}
 	}
 	return nil
 }
@@ -314,6 +445,28 @@ func parseFloatPair(value string) (a, b float64, err error) {
 		return 0, 0, err
 	}
 	return a, b, nil
+}
+
+// parseFloatTriple parses a "a,b,c" comma-separated triple of floats, used
+// by [Model]'s "offset" and "scale" keys.
+func parseFloatTriple(value string) (a, b, c float64, err error) {
+	parts := strings.SplitN(value, ",", 3)
+	if len(parts) != 3 {
+		return 0, 0, 0, fmt.Errorf("expected a \"a,b,c\" triple")
+	}
+	a, err = strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	b, err = strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	c, err = strconv.ParseFloat(strings.TrimSpace(parts[2]), 64)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return a, b, c, nil
 }
 
 // stripStageComment removes a ".def" comment from line — everything from

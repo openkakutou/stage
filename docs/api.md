@@ -23,11 +23,18 @@ tolerated and ignored rather than rejected:
 
 | `.def` section | Populates |
 |---|---|
-| `[BGDef]` | `BGdef.SpriteFile` |
+| `[BGDef]` | `BGdef.SpriteFile`, `BGdef.ModelFile` |
 | `[StageInfo]` | `BGdef.LocalCoordWidth`/`LocalCoordHeight`/`ZOffset` |
-| `[Camera]` | `CameraBounds`, `BGdef.ZoomOut`/`ZoomIn` |
-| `[PlayerInfo]` | `StageBoundaries` |
+| `[Camera]` | `CameraBounds`, `BGdef.ZoomOut`/`ZoomIn`, `BGdef.Near`/`Far`/`FOV`/`YShift` |
+| `[PlayerInfo]` | `StageBoundaries` (including its `TopBound`/`BottomBound`), `PlayerStartZ` |
+| `[Model]` | `Model` — Ikemen GO's 3D model placement/lighting settings |
+| `[Scaling]` | `Scaling` — Ikemen GO's 3D perspective-scaling settings |
 | `[BG <name>]` (one per layer) | An entry in `Elements`, matched case-insensitively |
+
+`BGdef.ModelFile`, `[Model]`, `[Scaling]`, and the 3D-only `[Camera]`/
+`[PlayerInfo]` keys are Ikemen GO's 3D stage extension (see the roadmap's
+`.vibe/decisions/014`); a 2D stage simply omits them and every
+corresponding field stays at its zero value.
 
 Any other section — `[Info]`, `[Bound]`, `[Shadow]`, `[Reflection]`,
 `[Music]`, or anything unrecognized — has no matching field on `Stage`, so
@@ -54,7 +61,8 @@ silently producing wrong data when:
 
 - a section header is missing its closing bracket,
 - a key expecting a number (or a `a,b` pair of numbers, e.g. `spriteno`,
-  `start`, `delta`, `tile`, `tilespacing`) has a value that isn't one, or
+  `start`, `delta`, `tile`, `tilespacing`; or a `a,b,c` triple, e.g.
+  `[Model]`'s `offset`/`scale`) has a value that isn't one, or
 - the underlying reader itself fails.
 
 ## `Serialize`
@@ -63,9 +71,11 @@ silently producing wrong data when:
 func Serialize(w io.Writer, s Stage) error
 ```
 
-Writes `s` to `w` as `.def` text: a `[BGDef]` section, a `[StageInfo]`
-section, a `[Camera]` section, a `[PlayerInfo]` section, then one
-`[BG <name>]` section per element, in slice order.
+Writes `s` to `w` as `.def` text: a `[BGDef]` section, a `[Model]` section
+(only for a model-based stage), a `[StageInfo]` section, a `[Camera]`
+section, a `[Scaling]` section (only for a model-based stage), a
+`[PlayerInfo]` section, then one `[BG <name>]` section per element, in
+slice order.
 
 This is a fresh-write path, not a byte-exact round trip of any original
 file's formatting, comments, or unrecognized sections — for that, see
@@ -76,6 +86,11 @@ reads back into an equivalent `Stage`.
   field is numeric and is always written — a zero value (e.g. `ZOffset`
   `0`, an element's `Delta` `0,0`) is meaningful `.def` data, not an
   "unset" sentinel.
+- `[Model]`, `[Scaling]`, the `[Camera]` section's `Near`/`Far`/`FOV`/
+  `YShift` keys, and the `[PlayerInfo]` section's `TopBound`/`BottomBound`/
+  `PlayerStartZ` keys are written only when `BGdef.ModelFile` is non-empty
+  — a 2D (non-model) `Stage` serializes exactly as it did before this 3D
+  extension existed.
 - A `BGElement`'s `Sprite` is written only for `BGElementNormal`/
   `BGElementParallax`; its `ActionNumber` is written only for
   `BGElementAnim` — mirroring which field `Parse` itself populates for
