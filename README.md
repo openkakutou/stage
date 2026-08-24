@@ -12,10 +12,11 @@ Available now:
 - Writing stage `.def` files back out: a fresh-write path for a stage built or edited in memory, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized content byte-for-byte instead of overwriting them
 - Resolving a BG element's sprite reference to real pixel data from a loaded sprite sheet, via [`sff`](https://github.com/openkakutou/sff), regardless of which `.sff` file version it came from
 - Ikemen GO's 3D model-based stage extension: a stage can reference a 3D model with its own placement, scaling, and image-based lighting, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions — a stage that doesn't use any of this reads and writes exactly as before
+- Computing where a scrolling background layer should appear on screen as the camera moves (parallax depth), and which frame an animated background layer should currently show at a given moment in time, including looping the animation once it finishes
 
 Planned:
 
-- Resolving parallax scroll deltas and animated background playback state
+- Reading an animated background layer's frame sequence out of a stage file
 - A WebAssembly build so web apps can load a stage without a Go toolchain
 <!-- vibe:end:features -->
 
@@ -140,6 +141,21 @@ if err != nil {
 	panic(err)
 }
 fmt.Printf("%+v\n", sprite)
+```
+
+Computing a parallax layer's on-screen position as the camera scrolls, and which sprite an animated layer should currently show:
+
+```go
+element := s.Elements[0]
+x, y := stage.ResolveParallaxPosition(element, cameraX, cameraY)
+
+anim := stage.BGAnimation{
+	Frames: []stage.BGAnimFrame{
+		{Sprite: stage.SpriteRef{Group: 9, Image: 0}, Time: 10},
+		{Sprite: stage.SpriteRef{Group: 9, Image: 1}, Time: 5},
+	},
+}
+currentSprite := stage.ResolveAnimationFrame(anim, elapsedTicks)
 ```
 <!-- vibe:end:usage -->
 

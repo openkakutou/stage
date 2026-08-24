@@ -6,8 +6,13 @@ A single background layer of a stage — a static sprite, a depth-scrolling (par
 _Sources: `bg_element.go`_
 
 ## Parallax
-A BG element whose scroll speed is a fraction of the camera's own movement, so it appears to sit farther away than layers that scroll at full speed — the classic depth illusion in a 2D background. Expressed as the element's `DeltaX`/`DeltaY` scroll ratio.
-_Sources: `bg_element.go`_
+A BG element whose scroll speed is a fraction of the camera's own movement, so it appears to sit farther away than layers that scroll at full speed — the classic depth illusion in a 2D background. Expressed as the element's `DeltaX`/`DeltaY` scroll ratio; `ResolveParallaxPosition` computes the resulting on-screen position from a given camera position.
+_Sources: `bg_element.go`, `animation.go`_
+
+## BG animation
+The frame sequence an animated BG element (`BGElementAnim`) plays over time — which sprite is shown and for how long, plus the point playback loops back to once the sequence finishes once. Same underlying `[Begin Action N]` file syntax as a character's own `.air` animations, so it mirrors that concept, but is a stage's own frame sequence rather than a shared one. `ResolveAnimationFrame` resolves the currently-visible sprite from elapsed time.
+**Do not confuse with:** Parallax, which is about scroll position, not which sprite is shown.
+_Sources: `animation.go`_
 
 ## Camera bounds
 The box the camera's own scroll position is clamped to as it follows the characters — distinct from Stage boundaries, which clamp the characters instead.

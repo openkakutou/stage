@@ -60,7 +60,35 @@ uses a different subset of the remaining fields.
 | `TileSpacingX`, `TileSpacingY` | `tilespacing` | Pixel gap between repeated tiles |
 
 `SpriteRef{Group, Image}` mirrors `.def`'s `spriteno` pair — the same
-(group, image) addressing scheme `sff` sprite sheets use.
+(group, image) addressing scheme `sff` sprite sheets use. `SpriteRef` also
+carries an `IsBlank()` method reporting whether it is the "no sprite shown"
+sentinel (`Group` or `Image` below zero) — the same negative-value
+convention `character`'s `air.Frame.IsBlank()` uses for the identical
+concept.
+
+## `BGAnimation`
+
+An animated element's (`Type == BGElementAnim`) frame sequence — the
+`.air`-syntax `[Begin Action N]` block `ActionNumber` refers to, mirroring
+`character`'s own `air.Animation`/`air.Frame` shape since the two share the
+identical underlying file syntax per MUGEN's stage documentation. Not yet
+populated by `Parse` — see [docs/api.md](api.md#resolveanimationframe).
+
+| Field | Type | Meaning |
+|---|---|---|
+| `Frames` | `[]BGAnimFrame` | The ordered sequence of displayed frames |
+| `LoopStart` | `int` | Index into `Frames` playback loops back to once the full sequence has played through once (`0`, the zero value, means "loop the whole sequence") |
+
+### `BGAnimFrame`
+
+| Field | Type | Meaning |
+|---|---|---|
+| `Sprite` | `SpriteRef` | Which sprite this frame displays |
+| `Time` | `int` | How many ticks to hold this frame before advancing |
+
+`ResolveAnimationFrame(anim BGAnimation, elapsedTicks int) SpriteRef`
+(see [docs/api.md](api.md#resolveanimationframe)) resolves which frame is
+current at a given elapsed tick count, honoring `LoopStart`.
 
 ## `CameraBounds` vs `StageBoundaries`
 

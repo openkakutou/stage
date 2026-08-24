@@ -3,9 +3,10 @@
 # Public API
 
 The `stage` package (repo root) exposes a read path (`Parse`), two write
-paths (`Serialize`, `Document`/`ParseDocument`), and a sprite-resolution
-path (`SpriteResolver`), over the pure-data model documented in
-[docs/data-model.md](data-model.md).
+paths (`Serialize`, `Document`/`ParseDocument`), a sprite-resolution path
+(`SpriteResolver`), and two playback-resolution functions
+(`ResolveParallaxPosition`, `ResolveAnimationFrame`), over the pure-data
+model documented in [docs/data-model.md](data-model.md).
 
 ## `Parse`
 
@@ -164,3 +165,57 @@ if err != nil {
 because only `BGElementNormal`/`BGElementParallax` elements carry a
 meaningful `Sprite` reference — see
 [`.vibe/decisions/002-sprite-resolver-takes-spriteref-not-bgelement.md`](../.vibe/decisions/002-sprite-resolver-takes-spriteref-not-bgelement.md).
+
+## `ResolveParallaxPosition`
+
+```go
+func ResolveParallaxPosition(element BGElement, cameraX, cameraY float64) (x, y float64)
+```
+
+Computes a BG element's effective on-screen position given the camera's
+current position, per MUGEN's own documented `delta` meaning: "how many
+pixels the background element should scroll for each pixel of camera
+movement." Concretely: `x = StartX + cameraX*DeltaX` (and the same for
+`y`). A `DeltaX`/`DeltaY` of `0` keeps the element fixed on screen no
+matter how the camera moves (e.g. a distant sky layer); `1` scrolls it
+exactly with the camera; a fractional value in between scrolls it more
+slowly than the camera, the classic depth illusion. The formula applies to
+any element regardless of `Type` — it only reads `StartX`/`StartY`/
+`DeltaX`/`DeltaY`, never panics, and accepts negative deltas (the format
+allows them) without special-casing.
+
+## `ResolveAnimationFrame`
+
+```go
+func ResolveAnimationFrame(anim BGAnimation, elapsedTicks int) SpriteRef
+```
+
+Returns the sprite an animated BG element should currently show,
+`elapsedTicks` after its animation started. Walks `anim.Frames` in order,
+each held for its own `Time`; once the full sequence has played through
+once, playback loops back to index `anim.LoopStart` (not necessarily the
+first frame) and keeps cycling `Frames[LoopStart:]` indefinitely —
+mirroring `character`'s `air.Animation`'s own `LoopStart` semantics, since
+this is the identical underlying `.air`-syntax `[Begin Action N]` block
+format (see [docs/data-model.md](data-model.md#bganimation)).
+
+A frame with a zero or negative `Time` is instantaneous — it is skipped
+when walking elapsed time, but does not otherwise break resolution.
+
+`ResolveAnimationFrame` never panics or returns an out-of-bounds frame: an
+empty `Frames` sequence, an out-of-range `LoopStart`, or a sequence whose
+frames carry no positive `Time` at all (so it could never actually advance
+or loop) all resolve to the blank "no sprite" sentinel (`SpriteRef{Group:
+-1, Image: -1}`, see `SpriteRef.IsBlank`) instead:
+
+```go
+sprite := stage.ResolveAnimationFrame(anim, elapsedTicks)
+if sprite.IsBlank() {
+	// nothing to draw this frame — malformed/empty animation data
+}
+```
+
+Reading an animated element's `Frames`/`LoopStart` out of real `.def` text
+(the `[Begin Action N]` block `ActionNumber` refers to) is not implemented
+yet — `BGAnimation` values are currently built in memory by the caller. See
+`.vibe/decisions/004-bg-animation-model-and-parallax-formula.md`.

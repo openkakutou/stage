@@ -105,6 +105,24 @@ Each of up to 8 players' starting depth (Z) position on a model-based stage (Ike
 | P1..P8 | int | `[PlayerInfo]` `p1startz`..`p8startz` |
 Defined in: `bounds.go`
 
+## BGAnimation
+An animated element's (`BGElementAnim`) frame sequence — the `[Begin Action N]` block `ActionNumber` refers to. Mirrors `character`'s `air.Animation`. Not yet populated by `Parse` — see `.vibe/decisions/004-bg-animation-model-and-parallax-formula.md`.
+
+| Field | Type | Notes |
+|---|---|---|
+| Frames | []BGAnimFrame | Ordered frame sequence |
+| LoopStart | int | Index playback loops back to after the full sequence plays once (0 = loop the whole sequence) |
+Defined in: `animation.go`
+
+## BGAnimFrame
+One displayed frame within a `BGAnimation`.
+
+| Field | Type | Notes |
+|---|---|---|
+| Sprite | SpriteRef | Which sprite this frame displays |
+| Time | int | Ticks to hold this frame before advancing |
+Defined in: `animation.go`
+
 ## Document
 Write-path counterpart to `Parse`/`Serialize`: retains the exact source bytes `ParseDocument` read alongside the decoded data, so `Serialize` can reproduce an unmodified file byte-for-byte (comments, section ordering, unrecognized content included). Mutating `Stage` after parsing has no effect on `Serialize`'s output.
 

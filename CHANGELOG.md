@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Scrolling background layers now compute their real on-screen position from the camera's position and their configured scroll speed, giving parallax (depth) layers the correct offset as the camera moves. Animated background layers now resolve which sprite frame should currently be shown from elapsed time, including looping back once the sequence finishes, instead of only being able to show a single static image.
+
 ## [0.5.0] - 2026-08-23
 
 ### Added
