@@ -1,6 +1,6 @@
 # Module: root
 **Role:** Package `stage` at the module root — the library version constant, the stage read-path data model (`Stage`, `BGdef`, `BGElement` and its `BGElementType`/`SpriteRef` support types, `CameraBounds`, `StageBoundaries`, and Ikemen GO's 3D stage extension: `Model`, `Scaling`, `PlayerStartZ`), the `.def` read-path parser (`Parse`), the `.def` write path (a fresh-write `Serialize` plus a format-preserving `Document`/`ParseDocument` pair, mirroring `character`'s own `def` package split), sprite resolution (`SpriteResolver`) against the external `sff` module, and BG element playback resolution (`ResolveParallaxPosition`, `ResolveAnimationFrame`, `BGAnimation`/`BGAnimFrame`, item 005).
-**Files:** `version.go`, `bgdef.go`, `bg_element.go`, `bounds.go`, `model.go`, `scaling.go`, `stage.go`, `parser.go`, `serializer.go`, `document.go`, `sprite_resolver.go`, `animation.go`
+**Files:** `version.go`, `bgdef.go`, `bg_element.go`, `bounds.go`, `model.go`, `scaling.go`, `stage.go`, `parser.go`, `serializer.go`, `document.go`, `sprite_resolver.go`, `animation.go`, `save.go`
 **Exports:**
 - `Version` (string constant)
 - `Stage` — root aggregate: `BGdef`, `Elements []BGElement`, `CameraBounds`, `StageBoundaries`, `Model`, `Scaling`, `PlayerStartZ`
@@ -21,4 +21,5 @@
 - `SpriteResolver`/`NewSpriteResolver(groups []sff.SpriteGroup) *SpriteResolver` — indexes sprite groups loaded via `sff.Load` by `(Group, Image)`; `(*SpriteResolver).Resolve(ref SpriteRef) (sff.Sprite, error)` looks one up, returning a descriptive error rather than a zero value for an unmatched reference, version-agnostic the same way `character`'s `air.SpriteResolver` is (see `.vibe/decisions/002`)
 - `ResolveParallaxPosition(element BGElement, cameraX, cameraY float64) (x, y float64)` — pure function: effective on-screen position as `StartX/Y + camera*DeltaX/Y`, per MUGEN's documented `delta` meaning
 - `ResolveAnimationFrame(anim BGAnimation, elapsedTicks int) SpriteRef` — pure function: the currently-visible sprite for an animated element at a given elapsed tick count, honoring `LoopStart` looping; returns a blank `SpriteRef` sentinel (never panics) for an empty/malformed sequence or an out-of-range `LoopStart`
+- `SerializeDef(original []byte, s Stage) ([]byte, error)` — a third write path designed for a caller holding only a `Stage` value plus the original file's bytes (e.g. `cmd/wasm`, see `modules/wasm.md`): byte-exact to `original` when `s` is unchanged (after normalizing nil `Elements` to empty), fresh-serialized via `Serialize` otherwise; mirrors `character`'s own `SerializeDef`
 **Depends on:** `github.com/openkakutou/sff` (sprite sheet loading and resolution, arrived with backlog item 004)

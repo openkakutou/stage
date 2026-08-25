@@ -2,11 +2,13 @@
 
 # Public API
 
-The `stage` package (repo root) exposes a read path (`Parse`), two write
-paths (`Serialize`, `Document`/`ParseDocument`), a sprite-resolution path
-(`SpriteResolver`), and two playback-resolution functions
-(`ResolveParallaxPosition`, `ResolveAnimationFrame`), over the pure-data
-model documented in [docs/data-model.md](data-model.md).
+The `stage` package (repo root) exposes a read path (`Parse`), three write
+paths (`Serialize`, `Document`/`ParseDocument`, `SerializeDef`), a
+sprite-resolution path (`SpriteResolver`), and two playback-resolution
+functions (`ResolveParallaxPosition`, `ResolveAnimationFrame`), over the
+pure-data model documented in [docs/data-model.md](data-model.md). See also
+[docs/wasm.md](wasm.md) for the browser-facing WebAssembly build of this
+same API.
 
 ## `Parse`
 
@@ -128,6 +130,32 @@ section or key `Parse` doesn't recognize (e.g. `[Shadow]`, `[Reflection]`,
   malformed source, and a wrapped error if the underlying reader fails.
 - `Document.Serialize` returns a wrapped error if the underlying writer
   fails, never panics.
+
+## `SerializeDef`
+
+```go
+func SerializeDef(original []byte, s Stage) ([]byte, error)
+```
+
+A third write path, designed for a caller (e.g. the WASM entrypoint, see
+[docs/wasm.md](wasm.md)) that only ever holds a `Stage` value plus the
+original file's bytes — never a `Document`. `original` is the `.def`
+file's own previously loaded bytes, empty when `s` describes a brand new
+stage with no original file yet.
+
+- When `original` is non-empty and `s` (after normalizing a nil `Elements`
+  to an empty slice, so a JSON round trip through a JS caller is never
+  spuriously treated as an edit) is unchanged from what parsing `original`
+  itself produces, the original bytes are written back out verbatim —
+  byte-exact, matching `Document`'s guarantee.
+- Otherwise (`s` was edited, or `original` is empty), fresh text is
+  generated via `Serialize`, reflecting `s`'s current values without
+  preserving `original`'s comments/ordering.
+- A malformed `original` returns a descriptive error (from
+  `ParseDocument`) rather than silently falling back to a fresh serialize.
+
+Mirrors `character`'s own `SerializeDef`/`SerializeAir`/etc. — see
+[`.vibe/decisions/005-wasm-entrypoint-mirrors-character-load-save-shape.md`](../.vibe/decisions/005-wasm-entrypoint-mirrors-character-load-save-shape.md).
 
 ## `SpriteResolver`
 

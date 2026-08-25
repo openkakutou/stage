@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A stage can now be loaded and saved from a web browser, without needing Go installed: a WebAssembly build of this library is published as a downloadable file on every release. Saving an unedited stage reproduces the original file exactly; saving an edited one writes out the changes.
+
 ## [0.6.0] - 2026-08-25
 
 ### Added

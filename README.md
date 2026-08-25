@@ -13,11 +13,11 @@ Available now:
 - Resolving a BG element's sprite reference to real pixel data from a loaded sprite sheet, via [`sff`](https://github.com/openkakutou/sff), regardless of which `.sff` file version it came from
 - Ikemen GO's 3D model-based stage extension: a stage can reference a 3D model with its own placement, scaling, and image-based lighting, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions — a stage that doesn't use any of this reads and writes exactly as before
 - Computing where a scrolling background layer should appear on screen as the camera moves (parallax depth), and which frame an animated background layer should currently show at a given moment in time, including looping the animation once it finishes
+- Loading and saving a stage from a web browser, with no Go toolchain needed: a WebAssembly build of this library is published as a downloadable file on every release, so web apps like `stage-viewer-web` and `stage-editor` can use it directly
 
 Planned:
 
 - Reading an animated background layer's frame sequence out of a stage file
-- A WebAssembly build so web apps can load a stage without a Go toolchain
 <!-- vibe:end:features -->
 
 <!-- vibe:begin:install -->
@@ -157,9 +157,36 @@ anim := stage.BGAnimation{
 }
 currentSprite := stage.ResolveAnimationFrame(anim, elapsedTicks)
 ```
+
+### Loading a stage in a web browser (WebAssembly)
+
+A web app with no Go toolchain of its own can load (and save) a stage too, using a pre-built WebAssembly module downloaded from a tagged release's assets (`stage.wasm` + `wasm_exec.js`):
+
+```html
+<script src="wasm_exec.js"></script>
+<script>
+  const go = new Go();
+  WebAssembly.instantiateStreaming(fetch("stage.wasm"), go.importObject)
+    .then((result) => go.run(result.instance))
+    .then(async () => {
+      const defBytes = await fetch("stage0.def").then((r) => r.arrayBuffer()).then((buf) => new Uint8Array(buf));
+
+      const result = globalThis.OpenKakutouStage.load(defBytes);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      const stage = JSON.parse(result.stage);
+      console.log(`${stage.bgDef.spriteFile}: ${stage.elements.length} BG elements`);
+    });
+</script>
+```
+
+See [docs/wasm.md](docs/wasm.md) for the full JS API contract and how to build the module locally.
 <!-- vibe:end:usage -->
 
 <!-- vibe:begin:docs-index -->
-- [docs/api.md](docs/api.md) — the package's public functions — `Parse`, `Serialize`, `Document`/`ParseDocument` — and how they behave
+- [docs/api.md](docs/api.md) — the package's public functions — `Parse`, `Serialize`, `Document`/`ParseDocument`, `SerializeDef` — and how they behave
 - [docs/data-model.md](docs/data-model.md) — the stage data types (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) and the exact `.def` file section/key each field maps to
+- [docs/wasm.md](docs/wasm.md) — the WebAssembly entrypoint's JS API, how to build it locally, and the release pipeline that publishes it
 <!-- vibe:end:docs-index -->
