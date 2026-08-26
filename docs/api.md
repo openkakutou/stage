@@ -26,6 +26,7 @@ tolerated and ignored rather than rejected:
 
 | `.def` section | Populates |
 |---|---|
+| `[Info]` | `Name`, `Author` |
 | `[BGDef]` | `BGdef.SpriteFile`, `BGdef.ModelFile` |
 | `[StageInfo]` | `BGdef.LocalCoordWidth`/`LocalCoordHeight`/`ZOffset` |
 | `[Camera]` | `CameraBounds`, `BGdef.ZoomOut`/`ZoomIn`, `BGdef.Near`/`Far`/`FOV`/`YShift` |
@@ -39,9 +40,9 @@ tolerated and ignored rather than rejected:
 `.vibe/decisions/014`); a 2D stage simply omits them and every
 corresponding field stays at its zero value.
 
-Any other section — `[Info]`, `[Bound]`, `[Shadow]`, `[Reflection]`,
-`[Music]`, or anything unrecognized — has no matching field on `Stage`, so
-its lines are skipped without validation. Within a recognized section, an
+Any other, unrecognized section — `[Bound]`, `[Shadow]`, `[Reflection]`,
+`[Music]`, etc. — has no matching field on `Stage`, so its lines are
+skipped without validation. Within a recognized section, an
 unrecognized key is likewise ignored, and a content line that isn't a valid
 `key = value` pair is ignored rather than erroring — the same tolerance the
 `character` repo's `.def`/`.cns` parsers apply, since real MUGEN/Ikemen
@@ -74,17 +75,20 @@ silently producing wrong data when:
 func Serialize(w io.Writer, s Stage) error
 ```
 
-Writes `s` to `w` as `.def` text: a `[BGDef]` section, a `[Model]` section
-(only for a model-based stage), a `[StageInfo]` section, a `[Camera]`
-section, a `[Scaling]` section (only for a model-based stage), a
-`[PlayerInfo]` section, then one `[BG <name>]` section per element, in
-slice order.
+Writes `s` to `w` as `.def` text: an `[Info]` section, a `[BGDef]` section,
+a `[Model]` section (only for a model-based stage), a `[StageInfo]`
+section, a `[Camera]` section, a `[Scaling]` section (only for a
+model-based stage), a `[PlayerInfo]` section, then one `[BG <name>]`
+section per element, in slice order.
 
 This is a fresh-write path, not a byte-exact round trip of any original
 file's formatting, comments, or unrecognized sections — for that, see
 `Document` below. It only guarantees valid, readable output that `Parse`
 reads back into an equivalent `Stage`.
 
+- `Name` and `Author` are each omitted from `[Info]` when empty, and
+  always quoted when written (e.g. `name = "Training Room"`) — the
+  `[Info]` header itself is always written, even when both are empty.
 - `BGdef.SpriteFile` is omitted from `[BGDef]` when empty. Every other
   field is numeric and is always written — a zero value (e.g. `ZOffset`
   `0`, an element's `Delta` `0,0`) is meaningful `.def` data, not an

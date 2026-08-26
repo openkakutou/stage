@@ -7,8 +7,8 @@ This project is in early-stage development.
 
 Available now:
 
-- A data model for stage definitions: stage-level settings, BG elements/layers (static, parallax, and animated backgrounds), camera scroll limits, and character movement limits
-- Reading real MUGEN and Ikemen GO stage `.def` files into that model, including every background layer and Ikemen GO's tiling extension, with unrecognized content tolerated and malformed files reported with a clear, line-numbered error
+- A data model for stage definitions: name and author, stage-level settings, BG elements/layers (static, parallax, and animated backgrounds), camera scroll limits, and character movement limits
+- Reading real MUGEN and Ikemen GO stage `.def` files into that model, including its name/author, every background layer, and Ikemen GO's tiling extension, with unrecognized content tolerated and malformed files reported with a clear, line-numbered error
 - Writing stage `.def` files back out: a fresh-write path for a stage built or edited in memory, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized content byte-for-byte instead of overwriting them
 - Resolving a BG element's sprite reference to real pixel data from a loaded sprite sheet, via [`sff`](https://github.com/openkakutou/sff), regardless of which `.sff` file version it came from
 - Ikemen GO's 3D model-based stage extension: a stage can reference a 3D model with its own placement, scaling, and image-based lighting, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions — a stage that doesn't use any of this reads and writes exactly as before

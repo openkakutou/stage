@@ -8,6 +8,8 @@ import (
 
 func TestSerialize_FullStage_RoundTripsThroughParseWithEquivalentStructure(t *testing.T) {
 	s := Stage{
+		Name:   "Training Room",
+		Author: "Elecbyte",
 		BGdef: BGdef{
 			SpriteFile:       "stage0.sff",
 			LocalCoordWidth:  320,
@@ -55,6 +57,9 @@ func TestSerialize_FullStage_RoundTripsThroughParseWithEquivalentStructure(t *te
 		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, buf.String())
 	}
 
+	if got.Name != s.Name || got.Author != s.Author {
+		t.Errorf("Name/Author: expected %q/%q, got %q/%q", s.Name, s.Author, got.Name, got.Author)
+	}
 	if got.BGdef != s.BGdef {
 		t.Errorf("BGdef: expected %+v, got %+v", s.BGdef, got.BGdef)
 	}
@@ -101,6 +106,31 @@ func TestSerialize_MinimalStage_OmitsEmptySpriteFileAndRoundTrips(t *testing.T) 
 	}
 	if len(got.Elements) != 0 {
 		t.Errorf("expected no Elements, got %+v", got.Elements)
+	}
+}
+
+func TestSerialize_EmptyNameAndAuthor_OmitsInfoLinesButStillWritesSection(t *testing.T) {
+	s := Stage{BGdef: BGdef{LocalCoordWidth: 320, LocalCoordHeight: 240}}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+
+	if !strings.Contains(output, "[Info]") {
+		t.Errorf("expected the [Info] header to still be written, got:\n%s", output)
+	}
+	if strings.Contains(strings.ToLower(output), "name =") || strings.Contains(strings.ToLower(output), "author =") {
+		t.Errorf("expected no name/author lines when both are empty, got:\n%s", output)
+	}
+
+	got, err := Parse(strings.NewReader(output))
+	if err != nil {
+		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, output)
+	}
+	if got.Name != "" || got.Author != "" {
+		t.Errorf("expected empty Name/Author, got %q/%q", got.Name, got.Author)
 	}
 }
 

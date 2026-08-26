@@ -5,6 +5,9 @@ import "testing"
 func TestStage_ZeroValue_IsUsableWithNoElements(t *testing.T) {
 	var s Stage
 
+	if s.Name != "" || s.Author != "" {
+		t.Errorf("expected zero-value Stage to have empty Name/Author, got %q/%q", s.Name, s.Author)
+	}
 	if s.Elements != nil {
 		t.Errorf("expected zero-value Stage to have nil Elements, got %v", s.Elements)
 	}

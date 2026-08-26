@@ -1,8 +1,8 @@
 package stage
 
-// Stage is a MUGEN/Ikemen GO stage (background): its BGdef settings, BG
-// elements/layers, camera bounds, and stage boundaries — the read-path
-// pure-data model for a stage .def file's content.
+// Stage is a MUGEN/Ikemen GO stage (background): its name/author, BGdef
+// settings, BG elements/layers, camera bounds, and stage boundaries — the
+// read-path pure-data model for a stage .def file's content.
 //
 // This is the read-path surface — the stable vocabulary a library consumer
 // (viewer, editor) works with. It carries no .def parsing, file I/O, or
@@ -14,6 +14,12 @@ package stage
 // A zero-value Stage is valid and usable: Elements is nil (ranges over it
 // safely) and every nested settings/bounds type is itself zero-value-safe.
 type Stage struct {
+	// Name is the stage's display name (.def [Info] "name"). Empty when
+	// the source .def has no [Info] section, or omits the key.
+	Name string `json:"name"`
+	// Author is the stage's author/creator (.def [Info] "author"). Empty
+	// when the source .def has no [Info] section, or omits the key.
+	Author string `json:"author"`
 	// BGdef holds this stage's stage-level settings (sprite sheet,
 	// coordinate space, ground level, camera zoom range).
 	BGdef BGdef `json:"bgDef"`

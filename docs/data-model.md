@@ -19,6 +19,8 @@ defines.
 
 | Field | Type | Meaning |
 |---|---|---|
+| `Name` | `string` | The stage's display name (`.def` `[Info]` `name`), empty if the file has no `[Info]` section or omits the key |
+| `Author` | `string` | The stage's author/creator (`.def` `[Info]` `author`), empty if the file has no `[Info]` section or omits the key |
 | `BGdef` | `BGdef` | Stage-level settings (sprite sheet, coordinate space, ground level, camera zoom range) |
 | `Elements` | `[]BGElement` | BG elements/layers, in `.def` file order |
 | `CameraBounds` | `CameraBounds` | The box the camera's own position is clamped to |

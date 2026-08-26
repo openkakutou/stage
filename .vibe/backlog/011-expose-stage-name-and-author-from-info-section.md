@@ -1,5 +1,5 @@
 ---
-status: todo
+status: in_progress
 depends_on: []
 ---
 # Expose Stage Name And Author From `[Info]` Section

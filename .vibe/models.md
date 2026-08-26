@@ -5,6 +5,8 @@ Root aggregate for a MUGEN/Ikemen GO stage. Zero-value valid (nil `Elements` ran
 
 | Field | Type | Notes |
 |---|---|---|
+| Name | string | Display name, from `.def` `[Info]` "name" — empty if absent |
+| Author | string | Author/creator, from `.def` `[Info]` "author" — empty if absent |
 | BGdef | BGdef | Stage-level settings |
 | Elements | []BGElement | BG elements/layers, in `.def` file order |
 | CameraBounds | CameraBounds | Camera's own scroll clamp |

@@ -5,18 +5,19 @@ import (
 	"io"
 )
 
-// Serialize writes s to w as MUGEN/Ikemen GO stage .def text: a "[BGDef]"
-// section, a "[Model]" section, a "[StageInfo]" section, a "[Camera]"
-// section, a "[Scaling]" section, a "[PlayerInfo]" section, then one
-// "[BG <name>]" section per element in slice order.
+// Serialize writes s to w as MUGEN/Ikemen GO stage .def text: an "[Info]"
+// section, a "[BGDef]" section, a "[Model]" section, a "[StageInfo]"
+// section, a "[Camera]" section, a "[Scaling]" section, a "[PlayerInfo]"
+// section, then one "[BG <name>]" section per element in slice order.
 //
 // This is a first-pass write path: it does not attempt a byte-exact
 // round-trip of any original file's formatting, comments, or unrecognized
 // sections (a separate, format-preserving concern — see Document) — it only
 // guarantees valid, readable output that Parse reads back into an
-// equivalent Stage. BGdef.SpriteFile is omitted from "[BGDef]" when empty,
-// matching character's def.Serialize convention for optional string
-// fields; every other field is numeric, so it is always written, since a
+// equivalent Stage. Name and Author are always quoted, matching character's
+// def.Serialize convention for the same fields, and are omitted from
+// "[Info]" when empty; BGdef.SpriteFile is likewise omitted from "[BGDef]"
+// when empty; every other field is numeric, so it is always written, since a
 // zero value there (e.g. ZOffset 0, an element's Delta 0,0) is meaningful
 // data rather than an "unset" sentinel. A BGElement's Sprite is written
 // only for BGElementNormal/BGElementParallax and its ActionNumber only for
@@ -32,6 +33,9 @@ import (
 func Serialize(w io.Writer, s Stage) error {
 	is3D := s.BGdef.ModelFile != ""
 
+	if err := writeInfoSection(w, s); err != nil {
+		return err
+	}
 	if err := writeBGDefSection(w, s.BGdef); err != nil {
 		return err
 	}
@@ -58,6 +62,26 @@ func Serialize(w io.Writer, s Stage) error {
 		if err := writeBGElementSection(w, el); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func writeInfoSection(w io.Writer, s Stage) error {
+	if _, err := fmt.Fprintln(w, "[Info]"); err != nil {
+		return fmt.Errorf("stage: writing [Info] header: %w", err)
+	}
+	if s.Name != "" {
+		if _, err := fmt.Fprintf(w, "name = %q\n", s.Name); err != nil {
+			return fmt.Errorf("stage: writing name: %w", err)
+		}
+	}
+	if s.Author != "" {
+		if _, err := fmt.Fprintf(w, "author = %q\n", s.Author); err != nil {
+			return fmt.Errorf("stage: writing author: %w", err)
+		}
+	}
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("stage: writing section separator: %w", err)
 	}
 	return nil
 }

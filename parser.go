@@ -12,21 +12,21 @@ import (
 // it describes.
 //
 // Only sections this data model has a place for are recognized:
-// "[BGDef]" (BGdef.SpriteFile plus, for a model-based stage, its
-// ModelFile), "[StageInfo]" (BGdef's local coordinate space and ground
-// level), "[Camera]" (CameraBounds plus BGdef's zoom range and, for a
-// model-based stage, its Near/Far/FOV/YShift), "[PlayerInfo]"
-// (StageBoundaries, plus its z-axis extension and PlayerStartZ for a
-// model-based stage), "[Model]" and "[Scaling]" (Ikemen GO's 3D stage
-// extension, see the roadmap's .vibe/decisions/014), and one
-// "[BG <name>]" section per background element (matched
-// case-insensitively). Any other section —
-// including "[Info]", "[Bound]", "[Shadow]", "[Reflection]", "[Music]" —
-// carries nothing this model represents, so its lines are skipped without
-// validation, the same way def.Parse/cns.Parse in the character repo skip
-// unrecognized sections rather than aborting the read. Within a recognized
-// section, an unrecognized key is likewise ignored, and a content line that
-// isn't a valid "key = value" pair is ignored rather than erroring — real
+// "[Info]" (Stage.Name/Author), "[BGDef]" (BGdef.SpriteFile plus, for a
+// model-based stage, its ModelFile), "[StageInfo]" (BGdef's local
+// coordinate space and ground level), "[Camera]" (CameraBounds plus
+// BGdef's zoom range and, for a model-based stage, its Near/Far/FOV/
+// YShift), "[PlayerInfo]" (StageBoundaries, plus its z-axis extension and
+// PlayerStartZ for a model-based stage), "[Model]" and "[Scaling]"
+// (Ikemen GO's 3D stage extension, see the roadmap's .vibe/decisions/014),
+// and one "[BG <name>]" section per background element (matched
+// case-insensitively). Any other section — including "[Bound]",
+// "[Shadow]", "[Reflection]", "[Music]" — carries nothing this model
+// represents, so its lines are skipped without validation, the same way
+// def.Parse/cns.Parse in the character repo skip unrecognized sections
+// rather than aborting the read. Within a recognized section, an
+// unrecognized key is likewise ignored, and a content line that isn't a
+// valid "key = value" pair is ignored rather than erroring — real
 // MUGEN/Ikemen engines tolerate both. Comment lines (';', whole-line or
 // trailing) are stripped before parsing, and values may optionally be
 // wrapped in double quotes, which are removed.
@@ -87,6 +87,13 @@ func Parse(r io.Reader) (Stage, error) {
 		}
 
 		switch currentSection {
+		case "info":
+			switch strings.ToLower(key) {
+			case "name":
+				stage.Name = value
+			case "author":
+				stage.Author = value
+			}
 		case "bgdef":
 			switch {
 			case strings.EqualFold(key, "spr"):
@@ -133,9 +140,8 @@ func Parse(r io.Reader) (Stage, error) {
 				return Stage{}, err
 			}
 		}
-		// Any other section — including "info" and anything unrecognized —
-		// carries nothing this model represents; its key=value lines are
-		// ignored.
+		// Any other, unrecognized section carries nothing this model
+		// represents; its key=value lines are ignored.
 	}
 
 	flushCurrent()

@@ -53,6 +53,9 @@ layerno = 1
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	if s.Name != "Training Room" || s.Author != "Elecbyte" {
+		t.Errorf("expected Name/Author %q/%q, got %q/%q", "Training Room", "Elecbyte", s.Name, s.Author)
+	}
 	if s.BGdef.SpriteFile != "stage0.sff" {
 		t.Errorf("expected BGdef.SpriteFile %q, got %q", "stage0.sff", s.BGdef.SpriteFile)
 	}
@@ -462,6 +465,37 @@ boundleft = -20
 	}
 	if s.CameraBounds.Left != -20 {
 		t.Errorf("expected CameraBounds.Left -20, got %d", s.CameraBounds.Left)
+	}
+}
+
+func TestParse_NoInfoSection_LeavesNameAndAuthorEmpty(t *testing.T) {
+	src := `[BGDef]
+spr = stage0.sff
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.Name != "" || s.Author != "" {
+		t.Errorf("expected empty Name/Author with no [Info] section, got %q/%q", s.Name, s.Author)
+	}
+}
+
+func TestParse_InfoSectionMissingAuthorKey_LeavesAuthorEmpty(t *testing.T) {
+	src := `[Info]
+name = "Training Room"
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.Name != "Training Room" {
+		t.Errorf("expected Name %q, got %q", "Training Room", s.Name)
+	}
+	if s.Author != "" {
+		t.Errorf("expected empty Author when the key is absent, got %q", s.Author)
 	}
 }
 
