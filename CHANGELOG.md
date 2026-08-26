@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-26
+
 ### Added
 
 - A stage's name and author (when the file sets them) are now read and kept when the file is loaded or saved.
@@ -53,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/openkakutou/stage/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/openkakutou/stage/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/openkakutou/stage/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/openkakutou/stage/compare/v0.4.0...v0.5.0
