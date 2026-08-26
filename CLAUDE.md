@@ -42,6 +42,17 @@ Read **and** write support for MUGEN/Ikemen GO stage (background) `.def` files:
 
 3. **Depends on `sff`, never on `character`.** Stage BG elements reference sprite sheets in the `.sff` format; sprite decoding belongs to the shared `sff` repo, not to this one or to `character`. See the roadmap's decision `007`.
 
+## WASM release propagation <!-- keep -->
+
+This repo's WASM build (`stage.wasm` + `wasm_exec.js`) is consumed by pinned-version downstream apps — currently `stage-viewer-web` and `stage-editor`, each pinning an exact tag in their own `.github/workflows/deploy-pages.yml` (`npm run wasm:download -- vX.Y.Z`). See `roadmap`'s `.vibe/decisions/016-wasm-version-pinning-push-based-propagation.md` for the org-wide policy this implements: **exact pins, propagated by the producer's own release step — no scheduled job.**
+
+**After `/vibe:release` tags a new version here**, as a follow-up in the same session:
+1. For each known consumer (currently `stage-viewer-web` and `stage-editor`; check `roadmap/repos.md` if this list may be stale), open it and read its `CLAUDE.md`'s WASM-dependency section for the exact pin location.
+2. Bump the pin there to the new tag.
+3. Run that consumer's own test suite. If green: commit (`chore: bump stage WASM to vX.Y.Z`) and push. If red: stop, do **not** force the bump through, and flag the incompatibility to the user instead — it means this release has a breaking change for that consumer.
+
+Skip this if the release has no user-visible/behavioral change consumers would care about (e.g. docs-only, internal refactor with no CHANGELOG entry).
+
 ## Architecture
 
 Early scaffold stage — only the module skeleton exists so far; the data model, parser, serializer, sprite integration, and WASM entrypoint are all planned backlog work.
