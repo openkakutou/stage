@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Consuming apps can now resolve which frame an animated background element should currently show, for as many elements as needed in a single call, without reimplementing the frame-timing logic themselves.
+
 ## [0.9.0] - 2026-08-28
 
 ### Added

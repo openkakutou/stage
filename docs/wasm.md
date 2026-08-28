@@ -20,7 +20,7 @@ never touch it.
 
 ## JS API
 
-The module registers a single global on `js.Global()` with two functions.
+The module registers a single global on `js.Global()` with three functions.
 
 ### Loading a stage
 
@@ -93,6 +93,63 @@ if (saveResult.error) {
   throw new Error(saveResult.error);
 }
 // saveResult.bytes is ready to offer as a browser download
+```
+
+### Resolving animation frames
+
+```js
+globalThis.OpenKakutouStage.resolveAnimationFrames(requestsJSON)
+```
+
+Resolves, for one or more animated BG elements at once, which sprite each
+should currently show — the WASM-side counterpart of
+[`stage.ResolveAnimationFrame`](api.md#resolveanimationframe). A single
+call batches every element that needs resolving on a given rendered
+frame, rather than one call per element, since each JS↔WASM crossing
+carries fixed overhead that would otherwise multiply by element count on
+every animation frame (see
+[`.vibe/decisions/007-batched-resolve-animation-frames-wasm-call.md`](../.vibe/decisions/007-batched-resolve-animation-frames-wasm-call.md)).
+
+- **Arguments**: one JSON string — an array of
+  `{ animation, elapsedTicks }` requests, in the order the caller wants
+  results back in. `animation` is the same shape `load`'s own
+  `stage.animations[actionNumber]` already exposes (or `null` when an
+  element's `actionNumber` has no matching parsed animation block).
+  `elapsedTicks` is how far into playback that element currently is.
+- **Return value**: always a plain object `{ sprites, error }`, exactly
+  one field non-`null`:
+  - `sprites` — an array of `{ group, image }` sprite references, same
+    length and order as the input requests. A request whose `animation`
+    is `null`, empty, or otherwise malformed resolves to the blank
+    sentinel `{ group: -1, image: -1 }` rather than failing that entry or
+    the whole call — mirrors `ResolveAnimationFrame`'s own "never panics"
+    contract.
+  - `error` — set only when the whole `requestsJSON` argument itself
+    cannot be parsed, or the argument count is wrong; individual
+    malformed/missing animations never produce an error.
+- Same never-throws, never-broken-after-an-error guarantee as `load` and
+  `save`.
+
+#### Example
+
+```js
+const loadResult = globalThis.OpenKakutouStage.load(defBytes);
+const stage = JSON.parse(loadResult.stage);
+
+// Re-stringify each element's animation once (e.g. when the stage loads
+// or the element changes), not on every rendered frame — only
+// elapsedTicks needs to change per frame.
+const animatedElements = stage.elements.filter((el) => el.type === "anim");
+const requests = animatedElements.map((el) => ({
+  animation: stage.animations[el.actionNumber] ?? null,
+  elapsedTicks: 0, // updated every rendered frame
+}));
+
+const result = globalThis.OpenKakutouStage.resolveAnimationFrames(JSON.stringify(requests));
+if (result.error) {
+  throw new Error(result.error);
+}
+// result.sprites[i] is the sprite to draw for animatedElements[i]
 ```
 
 ## Not yet exposed
