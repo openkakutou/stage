@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends_on: [005]
 ---
 # Parse `[Begin Action N]` Blocks Into `BGAnimation`
