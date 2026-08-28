@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-29
+
 ### Added
 
 - Consuming apps can now resolve which frame an animated background element should currently show, for as many elements as needed in a single call, without reimplementing the frame-timing logic themselves.
@@ -65,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/openkakutou/stage/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/openkakutou/stage/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/openkakutou/stage/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/openkakutou/stage/compare/v0.6.0...v0.7.0
