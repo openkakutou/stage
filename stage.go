@@ -25,6 +25,14 @@ type Stage struct {
 	BGdef BGdef `json:"bgDef"`
 	// Elements are this stage's BG elements/layers, in .def file order.
 	Elements []BGElement `json:"elements"`
+	// Animations holds every "[Begin Action N]" block this stage's .def
+	// declared, keyed by action number -- resolve a BGElementAnim's
+	// ActionNumber against this map (then ResolveAnimationFrame) to find
+	// its currently-visible sprite. Nil when the stage declares no such
+	// blocks, mirroring Elements's own nil-when-empty convention. A
+	// "[Begin Action N]" block can appear anywhere in the file, not
+	// necessarily next to the element(s) that reference it.
+	Animations map[int]BGAnimation `json:"animations"`
 	// CameraBounds is the box the camera's own position is clamped to.
 	CameraBounds CameraBounds `json:"cameraBounds"`
 	// StageBoundaries is the x-range (and, for a model-based stage,

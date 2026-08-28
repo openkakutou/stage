@@ -12,12 +12,8 @@ Available now:
 - Writing stage `.def` files back out: a fresh-write path for a stage built or edited in memory, and a format-preserving path that reproduces an unmodified file's comments, section ordering, and unrecognized content byte-for-byte instead of overwriting them
 - Resolving a BG element's sprite reference to real pixel data from a loaded sprite sheet, via [`sff`](https://github.com/openkakutou/sff), regardless of which `.sff` file version it came from
 - Ikemen GO's 3D model-based stage extension: a stage can reference a 3D model with its own placement, scaling, and image-based lighting, plus depth-based (Z-axis) camera perspective, character movement limits, and per-player starting positions — a stage that doesn't use any of this reads and writes exactly as before
-- Computing where a scrolling background layer should appear on screen as the camera moves (parallax depth), and which frame an animated background layer should currently show at a given moment in time, including looping the animation once it finishes
+- Reading an animated background layer's actual frame sequence out of a stage file — wherever in the file it's declared — and computing where a scrolling background layer should appear on screen as the camera moves (parallax depth) and which frame an animated one should currently show at a given moment in time, including looping the animation once it finishes; saving a stage writes that frame data back out for every animated layer that still uses it
 - Loading and saving a stage from a web browser, with no Go toolchain needed: a WebAssembly build of this library is published as a downloadable file on every release, so web apps like `stage-viewer-web` and `stage-editor` can use it directly
-
-Planned:
-
-- Reading an animated background layer's frame sequence out of a stage file
 <!-- vibe:end:features -->
 
 <!-- vibe:begin:install -->

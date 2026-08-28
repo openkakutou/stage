@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Animated background elements now get their actual frame sequence read from the stage file, wherever in the file it's declared, instead of only carrying a reference nothing resolves. Saving a stage writes that frame data back out for every animated element that still uses it. A malformed frame line or animation block header shows a clear error naming the exact line instead of failing silently or corrupting the rest of the stage.
+
 ## [0.8.0] - 2026-08-26
 
 ### Added

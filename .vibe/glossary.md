@@ -10,9 +10,9 @@ A BG element whose scroll speed is a fraction of the camera's own movement, so i
 _Sources: `bg_element.go`, `animation.go`_
 
 ## BG animation
-The frame sequence an animated BG element (`BGElementAnim`) plays over time — which sprite is shown and for how long, plus the point playback loops back to once the sequence finishes once. Same underlying `[Begin Action N]` file syntax as a character's own `.air` animations, so it mirrors that concept, but is a stage's own frame sequence rather than a shared one. `ResolveAnimationFrame` resolves the currently-visible sprite from elapsed time.
+The frame sequence an animated BG element (`BGElementAnim`) plays over time — which sprite is shown and for how long, plus the point playback loops back to once the sequence finishes once. Same underlying `[Begin Action N]` file syntax as a character's own `.air` animations, so it mirrors that concept, but is a stage's own frame sequence rather than a shared one. `Parse` reads it from real `.def` text into `Stage.Animations`, keyed by action number; `ResolveAnimationFrame` resolves the currently-visible sprite from elapsed time.
 **Do not confuse with:** Parallax, which is about scroll position, not which sprite is shown.
-_Sources: `animation.go`_
+_Sources: `animation.go`, `parser.go`, `serializer.go`_
 
 ## Camera bounds
 The box the camera's own scroll position is clamped to as it follows the characters — distinct from Stage boundaries, which clamp the characters instead.

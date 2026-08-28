@@ -9,6 +9,7 @@ Root aggregate for a MUGEN/Ikemen GO stage. Zero-value valid (nil `Elements` ran
 | Author | string | Author/creator, from `.def` `[Info]` "author" — empty if absent |
 | BGdef | BGdef | Stage-level settings |
 | Elements | []BGElement | BG elements/layers, in `.def` file order |
+| Animations | map[int]BGAnimation | Every `[Begin Action N]` block, keyed by action number — nil when the stage declares none |
 | CameraBounds | CameraBounds | Camera's own scroll clamp |
 | StageBoundaries | StageBoundaries | Character x-movement clamp (and z-movement clamp, 3D-only) |
 | Model | Model | 3D model placement/lighting (Ikemen GO extension, zero-valued for a 2D stage) |
@@ -108,7 +109,7 @@ Each of up to 8 players' starting depth (Z) position on a model-based stage (Ike
 Defined in: `bounds.go`
 
 ## BGAnimation
-An animated element's (`BGElementAnim`) frame sequence — the `[Begin Action N]` block `ActionNumber` refers to. Mirrors `character`'s `air.Animation`. Not yet populated by `Parse` — see `.vibe/decisions/004-bg-animation-model-and-parallax-formula.md`.
+An animated element's (`BGElementAnim`) frame sequence — the `[Begin Action N]` block `ActionNumber` refers to. Mirrors `character`'s `air.Animation`. Populated by `Parse` into `Stage.Animations`, keyed by action number — see `.vibe/decisions/004-bg-animation-model-and-parallax-formula.md` and `.vibe/decisions/006-begin-action-parsing-frame-fields-and-serialize-scope.md`.
 
 | Field | Type | Notes |
 |---|---|---|

@@ -63,6 +63,9 @@ func Serialize(w io.Writer, s Stage) error {
 			return err
 		}
 	}
+	if err := writeBGAnimationBlocks(w, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -289,6 +292,64 @@ func writeBGElementSection(w io.Writer, el BGElement) error {
 	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("stage: writing section separator: %w", err)
+	}
+	return nil
+}
+
+// writeBGAnimationBlocks writes one "[Begin Action N]" block per distinct
+// action number actually referenced by a BGElementAnim element (in
+// first-reference order, not s.Animations' own randomized map-iteration
+// order), skipping a referenced number with no matching s.Animations entry
+// rather than erroring -- see .vibe/decisions/006.
+func writeBGAnimationBlocks(w io.Writer, s Stage) error {
+	written := make(map[int]bool)
+	for _, el := range s.Elements {
+		if el.Type != BGElementAnim || written[el.ActionNumber] {
+			continue
+		}
+		anim, ok := s.Animations[el.ActionNumber]
+		if !ok {
+			continue
+		}
+		written[el.ActionNumber] = true
+		if err := writeBGAnimationBlock(w, el.ActionNumber, anim); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// writeBGAnimationBlock writes one "[Begin Action N]" block: a frame line
+// per BGAnimFrame (group,image,0,0,time -- X/Y/Flip/Blend aren't modeled on
+// BGAnimFrame, see .vibe/decisions/006) and a "Loopstart" marker only when
+// LoopStart is non-zero, mirroring character/air's own Serialize
+// convention for the identical underlying syntax.
+func writeBGAnimationBlock(w io.Writer, actionNumber int, anim BGAnimation) error {
+	if _, err := fmt.Fprintf(w, "[Begin Action %d]\n", actionNumber); err != nil {
+		return fmt.Errorf("stage: writing action %d header: %w", actionNumber, err)
+	}
+
+	for i, frame := range anim.Frames {
+		if anim.LoopStart != 0 && anim.LoopStart == i {
+			if _, err := fmt.Fprintln(w, "Loopstart"); err != nil {
+				return fmt.Errorf("stage: writing Loopstart marker for action %d: %w", actionNumber, err)
+			}
+		}
+		if _, err := fmt.Fprintf(w, "%d,%d, 0,0, %d\n", frame.Sprite.Group, frame.Sprite.Image, frame.Time); err != nil {
+			return fmt.Errorf("stage: writing action %d frame %d: %w", actionNumber, i, err)
+		}
+	}
+
+	// LoopStart may point past the last frame; that marker has no frame
+	// line to precede, so it's written once the frame loop above is done.
+	if anim.LoopStart != 0 && anim.LoopStart == len(anim.Frames) {
+		if _, err := fmt.Fprintln(w, "Loopstart"); err != nil {
+			return fmt.Errorf("stage: writing Loopstart marker for action %d: %w", actionNumber, err)
+		}
+	}
+
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("stage: writing action %d separator: %w", actionNumber, err)
 	}
 	return nil
 }

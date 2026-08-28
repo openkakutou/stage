@@ -4,9 +4,22 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+// actionHeaderPattern matches a "[Begin Action N]" line and captures the
+// action number -- same shape character/air's own actionHeaderPattern
+// uses, since the underlying file syntax is identical (this repo cannot
+// depend on character, so the pattern is duplicated rather than shared).
+var actionHeaderPattern = regexp.MustCompile(`(?i)^\[\s*begin\s+action\s+(-?\d+)\s*\]`)
+
+// actionHeaderAttemptPattern recognizes any bracket line that starts with
+// the "begin" keyword, whether or not it goes on to match
+// actionHeaderPattern -- used to tell a malformed "[Begin Action N]"
+// header apart from a genuinely unrelated bracket section.
+var actionHeaderAttemptPattern = regexp.MustCompile(`(?i)^\[\s*begin(\s|\]|$)`)
 
 // Parse reads MUGEN/Ikemen GO stage .def text from r and returns the Stage
 // it describes.
@@ -19,8 +32,11 @@ import (
 // YShift), "[PlayerInfo]" (StageBoundaries, plus its z-axis extension and
 // PlayerStartZ for a model-based stage), "[Model]" and "[Scaling]"
 // (Ikemen GO's 3D stage extension, see the roadmap's .vibe/decisions/014),
-// and one "[BG <name>]" section per background element (matched
-// case-insensitively). Any other section — including "[Bound]",
+// one "[BG <name>]" section per background element (matched
+// case-insensitively), and one "[Begin Action N]" section per animated BG
+// element's frame sequence (Stage.Animations, keyed by action number,
+// resolved independently of element order -- see .vibe/decisions/006 and
+// item 009). Any other section — including "[Bound]",
 // "[Shadow]", "[Reflection]", "[Music]" — carries nothing this model
 // represents, so its lines are skipped without validation, the same way
 // def.Parse/cns.Parse in the character repo skip unrecognized sections
@@ -46,11 +62,22 @@ func Parse(r io.Reader) (Stage, error) {
 	var elements []BGElement
 	var current *BGElement
 	var currentSection string
+	var currentAnimation *BGAnimation
+	var currentActionNumber int
 
 	flushCurrent := func() {
 		if current != nil {
 			elements = append(elements, *current)
 			current = nil
+		}
+	}
+	flushCurrentAnimation := func() {
+		if currentAnimation != nil {
+			if stage.Animations == nil {
+				stage.Animations = make(map[int]BGAnimation)
+			}
+			stage.Animations[currentActionNumber] = *currentAnimation
+			currentAnimation = nil
 		}
 	}
 
@@ -67,6 +94,7 @@ func Parse(r io.Reader) (Stage, error) {
 				return Stage{}, fmt.Errorf("stage: line %d: malformed section header %q", lineNumber, line)
 			}
 			flushCurrent()
+			flushCurrentAnimation()
 
 			raw := strings.TrimSpace(line[1 : len(line)-1])
 			if name, ok := bgElementName(raw); ok {
@@ -74,7 +102,36 @@ func Parse(r io.Reader) (Stage, error) {
 				currentSection = "bg"
 				continue
 			}
+			if m := actionHeaderPattern.FindStringSubmatch(line); m != nil {
+				number, err := strconv.Atoi(m[1])
+				if err != nil {
+					return Stage{}, fmt.Errorf("stage: line %d: invalid action number %q: %w", lineNumber, m[1], err)
+				}
+				currentAnimation = &BGAnimation{}
+				currentActionNumber = number
+				currentSection = "beginaction"
+				continue
+			}
+			if actionHeaderAttemptPattern.MatchString(line) {
+				return Stage{}, fmt.Errorf("stage: line %d: malformed action header %q", lineNumber, line)
+			}
 			currentSection = strings.ToLower(raw)
+			continue
+		}
+
+		if currentSection == "beginaction" {
+			if currentAnimation == nil {
+				continue
+			}
+			if strings.EqualFold(line, "loopstart") {
+				currentAnimation.LoopStart = len(currentAnimation.Frames)
+				continue
+			}
+			frame, err := parseBGAnimFrameLine(line)
+			if err != nil {
+				return Stage{}, fmt.Errorf("stage: line %d: %w", lineNumber, err)
+			}
+			currentAnimation.Frames = append(currentAnimation.Frames, frame)
 			continue
 		}
 
@@ -145,6 +202,7 @@ func Parse(r io.Reader) (Stage, error) {
 	}
 
 	flushCurrent()
+	flushCurrentAnimation()
 
 	if err := scanner.Err(); err != nil {
 		return Stage{}, fmt.Errorf("stage: reading stage definition source: %w", err)
@@ -417,6 +475,33 @@ func parseBGElementKey(el *BGElement, key, value string, lineNumber int) error {
 		el.TileSpacingX, el.TileSpacingY = x, y
 	}
 	return nil
+}
+
+// parseBGAnimFrameLine parses one "[Begin Action N]" frame line: the same
+// underlying ".air"-syntax "group,image,x,y,time[,flip[,blend]]" shape
+// character/air's own frame lines use (this repo cannot depend on
+// character, so this is a small, local reimplementation covering only what
+// BGAnimFrame models). x/y/flip/blend, if present, are validated as part
+// of the minimum-field-count shape but not stored -- see
+// .vibe/decisions/006.
+func parseBGAnimFrameLine(line string) (BGAnimFrame, error) {
+	fields := strings.Split(line, ",")
+	if len(fields) < 5 {
+		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: expected at least 5 comma-separated fields", line)
+	}
+	group, err := strconv.Atoi(strings.TrimSpace(fields[0]))
+	if err != nil {
+		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid group: %w", line, err)
+	}
+	image, err := strconv.Atoi(strings.TrimSpace(fields[1]))
+	if err != nil {
+		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid image: %w", line, err)
+	}
+	timeVal, err := strconv.Atoi(strings.TrimSpace(fields[4]))
+	if err != nil {
+		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid time: %w", line, err)
+	}
+	return BGAnimFrame{Sprite: SpriteRef{Group: group, Image: image}, Time: timeVal}, nil
 }
 
 // parseIntPair parses a "a,b" comma-separated pair of integers.

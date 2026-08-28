@@ -23,6 +23,7 @@ defines.
 | `Author` | `string` | The stage's author/creator (`.def` `[Info]` `author`), empty if the file has no `[Info]` section or omits the key |
 | `BGdef` | `BGdef` | Stage-level settings (sprite sheet, coordinate space, ground level, camera zoom range) |
 | `Elements` | `[]BGElement` | BG elements/layers, in `.def` file order |
+| `Animations` | `map[int]BGAnimation` | Every `[Begin Action N]` block the file declared, keyed by action number — resolve a `BGElementAnim`'s `ActionNumber` against this to find its frame data; `nil` when the stage declares none |
 | `CameraBounds` | `CameraBounds` | The box the camera's own position is clamped to |
 | `StageBoundaries` | `StageBoundaries` | The x-range (and, for a model-based stage, z-range) characters are allowed to move within |
 | `Model` | `Model` | 3D model placement/lighting settings (Ikemen GO extension, zero-valued unless `BGdef.ModelFile` is set) |
@@ -73,8 +74,12 @@ concept.
 An animated element's (`Type == BGElementAnim`) frame sequence — the
 `.air`-syntax `[Begin Action N]` block `ActionNumber` refers to, mirroring
 `character`'s own `air.Animation`/`air.Frame` shape since the two share the
-identical underlying file syntax per MUGEN's stage documentation. Not yet
-populated by `Parse` — see [docs/api.md](api.md#resolveanimationframe).
+identical underlying file syntax per MUGEN's stage documentation.
+Populated by `Parse` into `Stage.Animations`, keyed by action number — a
+block can appear anywhere in the file, not necessarily next to the
+element(s) that reference it. Only `Sprite`/`Time` are read from each
+frame line; `.air`'s optional `x`/`y`/`flip`/`blend` fields aren't modeled
+here (see `.vibe/decisions/006`). See [docs/api.md](api.md#resolveanimationframe).
 
 | Field | Type | Meaning |
 |---|---|---|

@@ -34,6 +34,7 @@ tolerated and ignored rather than rejected:
 | `[Model]` | `Model` — Ikemen GO's 3D model placement/lighting settings |
 | `[Scaling]` | `Scaling` — Ikemen GO's 3D perspective-scaling settings |
 | `[BG <name>]` (one per layer) | An entry in `Elements`, matched case-insensitively |
+| `[Begin Action N]` (one per animated layer's frame sequence) | An entry in `Animations`, keyed by action number — can appear anywhere in the file, not necessarily next to the element(s) referencing it |
 
 `BGdef.ModelFile`, `[Model]`, `[Scaling]`, and the 3D-only `[Camera]`/
 `[PlayerInfo]` keys are Ikemen GO's 3D stage extension (see the roadmap's
@@ -66,7 +67,11 @@ silently producing wrong data when:
 - a section header is missing its closing bracket,
 - a key expecting a number (or a `a,b` pair of numbers, e.g. `spriteno`,
   `start`, `delta`, `tile`, `tilespacing`; or a `a,b,c` triple, e.g.
-  `[Model]`'s `offset`/`scale`) has a value that isn't one, or
+  `[Model]`'s `offset`/`scale`) has a value that isn't one,
+- a bracket line looks like an attempted `[Begin Action N]` header (starts
+  with the `begin` keyword) but fails to parse (missing or non-numeric
+  action number), or a frame line inside one has fewer than 5
+  comma-separated fields or a non-numeric group/image/time, or
 - the underlying reader itself fails.
 
 ## `Serialize`
@@ -247,7 +252,25 @@ if sprite.IsBlank() {
 }
 ```
 
-Reading an animated element's `Frames`/`LoopStart` out of real `.def` text
-(the `[Begin Action N]` block `ActionNumber` refers to) is not implemented
-yet — `BGAnimation` values are currently built in memory by the caller. See
-`.vibe/decisions/004-bg-animation-model-and-parallax-formula.md`.
+`Parse` reads an animated element's `Frames`/`LoopStart` out of real `.def`
+text into `Stage.Animations[ActionNumber]`:
+
+```go
+s, err := stage.Parse(r)
+for _, el := range s.Elements {
+	if el.Type != stage.BGElementAnim {
+		continue
+	}
+	anim, ok := s.Animations[el.ActionNumber]
+	if !ok {
+		continue // referenced action number has no matching block
+	}
+	sprite := stage.ResolveAnimationFrame(anim, elapsedTicks)
+}
+```
+
+`Serialize` writes one `[Begin Action N]` block per distinct action number
+actually referenced by a `BGElementAnim` element, re-parseable by `Parse`
+into an equivalent result. See
+`.vibe/decisions/004-bg-animation-model-and-parallax-formula.md` and
+`.vibe/decisions/006-begin-action-parsing-frame-fields-and-serialize-scope.md`.
