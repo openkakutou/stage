@@ -20,8 +20,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"syscall/js"
 
+	"github.com/openkakutou/sff"
 	stage "github.com/openkakutou/stage"
 )
 
@@ -31,6 +33,7 @@ func main() {
 		"load":                   js.FuncOf(load),
 		"save":                   js.FuncOf(save),
 		"resolveAnimationFrames": js.FuncOf(resolveAnimationFrames),
+		"resolveSprites":         js.FuncOf(resolveSprites),
 	}))
 
 	// Registering js.FuncOf callbacks does not keep the Go runtime alive on
@@ -227,4 +230,115 @@ func resolveAnimationFramesResult(sprites []map[string]any, err error) map[strin
 		result[i] = s
 	}
 	return map[string]any{"sprites": result, "error": nil}
+}
+
+// resolveSprites is OpenKakutouStage.resolveSprites(sffBytes, requests,
+// overrideBytes) as seen from JS: sffBytes is a Uint8Array holding a
+// loaded .sff sprite sheet's raw bytes, requests is a JS array of
+// [group, image] pairs to resolve against it, and overrideBytes is an
+// optional Uint8Array of external .act palette bytes (undefined/null means
+// "use the sprite's own palette"). Returns one { pixels, width, height,
+// error } result per request, same order — batched in a single call
+// rather than one per sprite, mirroring the sibling character repo's own
+// resolveSprites (see .vibe/backlog/010, which this item follows). A
+// request naming a sprite absent from the sheet, or malformed sffBytes,
+// never throws or crashes the module — each affected entry reports a
+// descriptive error instead. This function carries no logic of its own
+// beyond argument conversion and batching: all real decoding lives in the
+// external sff module's ResolveSpritePixels.
+func resolveSprites(this js.Value, args []js.Value) any {
+	defer func() {
+		// See load's identical recover() — a panic here would otherwise
+		// tear down the whole page's WASM instance.
+		recover()
+	}()
+
+	if len(args) != 3 {
+		return []any{resolveSpritesResult(nil, 0, 0, fmt.Errorf("OpenKakutouStage.resolveSprites: expected 3 arguments (sffBytes, requests, overrideBytes), got %d", len(args)))}
+	}
+
+	sffBytes, err := bytesFromJS(args[0])
+	if err != nil {
+		return []any{resolveSpritesResult(nil, 0, 0, fmt.Errorf("OpenKakutouStage.resolveSprites: sffBytes: %w", err))}
+	}
+
+	override, overrideErr := overridePaletteFromJS(args[2])
+
+	n := args[1].Get("length").Int()
+	r := bytes.NewReader(sffBytes)
+	results := make([]any, n)
+	for i := 0; i < n; i++ {
+		if overrideErr != nil {
+			results[i] = resolveSpritesResult(nil, 0, 0, fmt.Errorf("OpenKakutouStage.resolveSprites: overrideBytes: %w", overrideErr))
+			continue
+		}
+		group, image, err := spriteRequestFromJS(args[1].Index(i))
+		if err != nil {
+			results[i] = resolveSpritesResult(nil, 0, 0, fmt.Errorf("OpenKakutouStage.resolveSprites: requests[%d]: %w", i, err))
+			continue
+		}
+		pixels, width, height, err := sff.ResolveSpritePixels(r, group, image, override)
+		results[i] = resolveSpritesResult(pixels, width, height, err)
+	}
+	return results
+}
+
+// overridePaletteFromJS decodes v as an external .act palette override, or
+// returns (nil, nil) when v is JS undefined/null — the two values a
+// caller uses to mean "no override, use the sprite's own palette". Any
+// other value, including an empty Uint8Array, is decoded via
+// sff.DecodeExternalPalette and its own validation (wrong size, etc.)
+// surfaces as err, never a silent fallback to no override.
+func overridePaletteFromJS(v js.Value) (*sff.Palette, error) {
+	if v.IsUndefined() || v.IsNull() {
+		return nil, nil
+	}
+	b, err := bytesFromJS(v)
+	if err != nil {
+		return nil, err
+	}
+	p, err := sff.DecodeExternalPalette(b)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+// spriteRequestFromJS reads one [group, image] pair from requests[i] as
+// seen from JS. Returns a descriptive error instead of panicking if v is
+// not a length-2 array-like value.
+func spriteRequestFromJS(v js.Value) (group, image int, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			group, image, err = 0, 0, fmt.Errorf("expected a [group, image] pair, got %v (%v)", v, r)
+		}
+	}()
+
+	if length := v.Get("length").Int(); length != 2 {
+		return 0, 0, fmt.Errorf("expected a [group, image] pair (length 2), got length %d", length)
+	}
+	return v.Index(0).Int(), v.Index(1).Int(), nil
+}
+
+// resolveSpritesResult builds resolveSprites's { pixels, width, height,
+// error } JS return shape for one resolved sprite. On error,
+// pixels/width/height are explicitly nil/0/0 rather than left undefined.
+func resolveSpritesResult(pixels []color.RGBA, width, height int, err error) map[string]any {
+	if err != nil {
+		return map[string]any{"pixels": nil, "width": 0, "height": 0, "error": err.Error()}
+	}
+	return map[string]any{"pixels": rgbaToJS(pixels), "width": width, "height": height, "error": nil}
+}
+
+// rgbaToJS converts a slice of decoded RGBA pixels into a flat JS
+// Uint8Array (4 bytes per pixel, R/G/B/A in order) — the same transfer
+// shape the sibling character repo's own resolveSprites uses.
+func rgbaToJS(pixels []color.RGBA) js.Value {
+	buf := make([]byte, len(pixels)*4)
+	for i, p := range pixels {
+		buf[i*4], buf[i*4+1], buf[i*4+2], buf[i*4+3] = p.R, p.G, p.B, p.A
+	}
+	arr := js.Global().Get("Uint8Array").New(len(buf))
+	js.CopyBytesToJS(arr, buf)
+	return arr
 }

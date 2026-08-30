@@ -20,7 +20,7 @@ never touch it.
 
 ## JS API
 
-The module registers a single global on `js.Global()` with three functions.
+The module registers a single global on `js.Global()` with four functions.
 
 ### Loading a stage
 
@@ -152,23 +152,84 @@ if (result.error) {
 // result.sprites[i] is the sprite to draw for animatedElements[i]
 ```
 
-## Not yet exposed
+### Resolving sprite pixels
 
-Resolving a sprite reference to actual pixel data (`SpriteResolver`, see
-[docs/api.md](api.md#spriteresolver)) is not exposed through this
-WASM entrypoint yet — only the `Stage` data model's sprite *references*
-(`group`/`image` pairs) travel through `load`'s JSON. A consumer needing
-real pixels currently has no WASM-side path for that; see the sibling
-`character` repo's own `resolveSprites` global for the shape this would
-likely mirror once added.
+```js
+globalThis.OpenKakutouStage.resolveSprites(sffBytes, requests, overrideBytes)
+```
+
+Resolves one or more `group`/`image` sprite references against a loaded
+`.sff` sprite sheet into actual displayable RGBA pixels — the WASM-side
+counterpart of the external [`sff`](https://github.com/openkakutou/sff)
+module's `ResolveSpritePixels`, exposed here since the `Stage` data
+model's own sprite references (as they travel through `load`'s JSON) never
+carry decoded pixel data. A single call batches every sprite a caller
+needs (e.g. every visible BG element on a rendered frame) rather than one
+call per sprite, for the same fixed-JS↔WASM-crossing-overhead reason
+`resolveAnimationFrames` batches. Mirrors the sibling `character` repo's
+own `resolveSprites` global closely enough that a browser consumer already
+using that one can reuse the same integration pattern here.
+
+- **Arguments**:
+  - `sffBytes` — a `Uint8Array` of a loaded `.sff` sprite sheet's raw
+    bytes (v1 or v2, auto-detected).
+  - `requests` — a JS array of `[group, image]` pairs to resolve, in the
+    order results are wanted back in.
+  - `overrideBytes` — an optional `Uint8Array` of external `.act` palette
+    bytes to recolor every resolved sprite with instead of its own
+    palette; `undefined`/`null` means "use the sprite's own palette".
+    Ignored for a v2 direct-color sprite, which has no palette of its own
+    to replace.
+- **Return value**: a JS array, same length and order as `requests`, one
+  plain object `{ pixels, width, height, error }` per entry — exactly one
+  of `pixels`/`error` non-`null` for that entry:
+  - `pixels` — a flat `Uint8Array` of `width * height * 4` bytes (R, G, B,
+    A per pixel, in order).
+  - `width`/`height` — the sprite's pixel dimensions; `0` when that entry
+    errored.
+  - `error` — a descriptive message; a request naming a sprite absent from
+    the sheet gets one prefixed `"sprite not found: "`, distinguishable
+    from every other failure (malformed `sffBytes`, corrupt pixel/palette
+    data, or a malformed `overrideBytes`/request entry).
+- A request for a sprite that doesn't exist, or a corrupted/malformed
+  `sffBytes`, never throws or crashes the module — only the affected
+  entry (or entries, for malformed `sffBytes`) reports an `error`; other
+  entries in the same batch are unaffected. Same never-throws,
+  never-broken-after-an-error guarantee as `load`, `save`, and
+  `resolveAnimationFrames`.
+
+See [`.vibe/backlog/done/010-expose-sprite-pixel-resolution-via-wasm.md`](../.vibe/backlog/done/010-expose-sprite-pixel-resolution-via-wasm.md)
+for the item that added this, and
+[docs/api.md](api.md#spriteresolver) for the Go-side `SpriteResolver`
+this complements (metadata-only sprite lookup, no decoded pixels).
+
+#### Example
+
+```js
+const loadResult = globalThis.OpenKakutouStage.load(defBytes);
+const stage = JSON.parse(loadResult.stage);
+
+const requests = stage.elements
+  .filter((el) => el.type === "normal" || el.type === "parallax")
+  .map((el) => [el.sprite.group, el.sprite.image]);
+
+const results = globalThis.OpenKakutouStage.resolveSprites(sffBytes, requests, null);
+for (const result of results) {
+  if (result.error) {
+    console.warn(result.error);
+    continue;
+  }
+  // result.pixels is a width*height*4 RGBA buffer, ready to draw
+}
+```
 
 ## Verifying a build
 
 `cmd/wasm/smoke.mjs` is a Node.js harness that loads a built module the
 same way a browser would (via `wasm_exec.js`) and exercises both the
-nominal path and error paths for `load` and `save` — the closest thing to
-`go test` this file has, since `syscall/js` code cannot run under the
-plain Go toolchain:
+nominal path and error paths for `load`, `save`, `resolveAnimationFrames`,
+and `resolveSprites` — the closest thing to `go test` this file has, since
+`syscall/js` code cannot run under the plain Go toolchain:
 
 ```sh
 node cmd/wasm/smoke.mjs [path/to/stage.wasm]  # defaults to ./stage.wasm

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: in_progress
 depends_on: [006]
 ---
 # Expose Sprite Pixel Resolution Via WASM

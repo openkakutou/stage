@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Consuming apps can now resolve a stage's background sprites into actual displayable pixels directly through the WASM build, for as many sprites as needed in a single call, with support for previewing an alternate color palette. A sprite that doesn't exist, or a corrupted sprite sheet, is reported with a clear error instead of breaking the preview.
+
 ## [0.10.0] - 2026-08-29
 
 ### Added

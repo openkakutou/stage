@@ -15,6 +15,7 @@ Available now:
 - Reading an animated background layer's actual frame sequence out of a stage file — wherever in the file it's declared — and computing where a scrolling background layer should appear on screen as the camera moves (parallax depth) and which frame an animated one should currently show at a given moment in time, including looping the animation once it finishes; saving a stage writes that frame data back out for every animated layer that still uses it
 - Loading and saving a stage from a web browser, with no Go toolchain needed: a WebAssembly build of this library is published as a downloadable file on every release, so web apps like `stage-viewer-web` and `stage-editor` can use it directly
 - Resolving which frame each animated background layer should currently show, for as many layers as needed in one call, directly from a web browser — no need to reimplement the frame-timing logic in JavaScript
+- Resolving a stage's background sprites into actual displayable pixels directly from a web browser, for as many sprites as needed in one call, with support for previewing an alternate color palette — a missing sprite or a corrupted sprite sheet is reported with a clear error instead of breaking the preview
 <!-- vibe:end:features -->
 
 <!-- vibe:begin:install -->

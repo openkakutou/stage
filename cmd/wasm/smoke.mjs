@@ -185,6 +185,63 @@ assert(typeof argCountAnimResult.error === "string" && argCountAnimResult.error.
 const afterAnimResult = globalThis.OpenKakutouStage.load(defBytes);
 assert(afterAnimResult.error === null, "module still works after the resolveAnimationFrames calls");
 
+// --- resolveSprites: batched sprite pixel resolution (item 010) ---
+// v1-basic.sff carries exactly one real sprite, at (group 0, image 0) —
+// copied from character's own cmd/wasm/testdata, the same tiny real-file
+// fixture that repo's own resolveSprites smoke test already exercises.
+const sffBytes = toUint8Array("cmd/wasm/testdata/v1-basic.sff");
+
+// --- nominal batch: one real sprite, one nonexistent (group, image) ---
+const spritesResult = globalThis.OpenKakutouStage.resolveSprites(sffBytes, [[0, 0], [999, 999]], null);
+assert(Array.isArray(spritesResult) && spritesResult.length === 2, "resolveSprites returns one result per request");
+
+const [foundSprite, notFoundSprite] = spritesResult;
+assert(foundSprite.error === null, `resolveSprites: real sprite reports no error (got: ${foundSprite.error})`);
+assert(foundSprite.pixels instanceof Uint8Array, "resolveSprites: real sprite returns a pixel buffer");
+assert(foundSprite.pixels.length === foundSprite.width * foundSprite.height * 4, "resolveSprites: pixel buffer length is width*height*4 (RGBA)");
+assert(foundSprite.width > 0 && foundSprite.height > 0, `resolveSprites: real sprite has positive dimensions (got: ${foundSprite.width}x${foundSprite.height})`);
+
+assert(notFoundSprite.pixels === null, "resolveSprites: nonexistent sprite returns null pixels");
+assert(notFoundSprite.width === 0 && notFoundSprite.height === 0, "resolveSprites: nonexistent sprite reports 0x0 dimensions");
+assert(
+	typeof notFoundSprite.error === "string" && notFoundSprite.error.startsWith("sprite not found: "),
+	`resolveSprites: nonexistent sprite error is distinguishable (got: ${notFoundSprite.error})`,
+);
+
+// --- external palette override recolors the sprite ---
+const spriteActBytes = toUint8Array("cmd/wasm/testdata/cyclops-v1-palette1.act");
+const overriddenSpriteResult = globalThis.OpenKakutouStage.resolveSprites(sffBytes, [[0, 0]], spriteActBytes);
+assert(overriddenSpriteResult[0].error === null, `resolveSprites: override reports no error (got: ${overriddenSpriteResult[0].error})`);
+const spriteColorsDiffer = overriddenSpriteResult[0].pixels.some((b, i) => b !== foundSprite.pixels[i]);
+assert(spriteColorsDiffer, "resolveSprites: external palette override changes the resolved colors");
+
+// --- undefined and null overrideBytes are equivalent to "no override" ---
+const undefinedOverrideSpriteResult = globalThis.OpenKakutouStage.resolveSprites(sffBytes, [[0, 0]], undefined);
+assert(
+	undefinedOverrideSpriteResult[0].pixels.every((b, i) => b === foundSprite.pixels[i]),
+	"resolveSprites: undefined overrideBytes matches the sprite's own palette",
+);
+
+// --- an explicitly empty overrideBytes is an error, not a silent fallback ---
+const emptyOverrideSpriteResult = globalThis.OpenKakutouStage.resolveSprites(sffBytes, [[0, 0]], new Uint8Array(0));
+assert(emptyOverrideSpriteResult[0].pixels === null, "resolveSprites: empty overrideBytes returns null pixels");
+assert(
+	typeof emptyOverrideSpriteResult[0].error === "string" && emptyOverrideSpriteResult[0].error.length > 0,
+	"resolveSprites: empty overrideBytes reports an error",
+);
+
+// --- malformed sffBytes: no throw, every request in the batch reports an error ---
+const malformedSpriteBatchResult = globalThis.OpenKakutouStage.resolveSprites(new TextEncoder().encode("garbage"), [[0, 0]], null);
+assert(malformedSpriteBatchResult[0].pixels === null, "resolveSprites: malformed sffBytes returns null pixels");
+assert(
+	typeof malformedSpriteBatchResult[0].error === "string" && malformedSpriteBatchResult[0].error.length > 0,
+	"resolveSprites: malformed sffBytes reports an error",
+);
+
+// The module must still respond correctly after resolveSprites errors too.
+const afterResolveSpritesErrorResult = globalThis.OpenKakutouStage.load(defBytes);
+assert(afterResolveSpritesErrorResult.error === null, "module still works after a prior resolveSprites error");
+
 if (process.exitCode) {
 	console.error("\nsmoke test FAILED");
 } else {
