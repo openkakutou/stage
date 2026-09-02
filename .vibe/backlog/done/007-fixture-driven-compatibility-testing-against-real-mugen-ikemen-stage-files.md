@@ -1,5 +1,5 @@
 ---
-status: in_progress
+status: done
 depends_on: [003]
 ---
 # Fixture-Driven Compatibility Testing Against Real MUGEN/Ikemen Stage Files
