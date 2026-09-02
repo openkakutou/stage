@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-09-02
+
+### Fixed
+
+- Now uses the latest version of the underlying sprite sheet library, which fixes two real-file loading bugs: a sprite sheet's last sprite could fail to load entirely when it reused an earlier sprite's palette, and legitimate extreme-aspect-ratio sprites were rejected as implausibly large.
+
 ## [0.11.0] - 2026-09-02
 
 ### Added
@@ -77,7 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/openkakutou/stage/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/openkakutou/stage/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/openkakutou/stage/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/openkakutou/stage/compare/v0.8.0...v0.9.0
