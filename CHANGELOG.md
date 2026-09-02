@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-02
+
 ### Added
 
 - Consuming apps can now resolve a stage's background sprites into actual displayable pixels directly through the WASM build, for as many sprites as needed in a single call, with support for previewing an alternate color palette. A sprite that doesn't exist, or a corrupted sprite sheet, is reported with a clear error instead of breaking the preview.
@@ -75,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/openkakutou/stage/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/openkakutou/stage/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/openkakutou/stage/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/openkakutou/stage/compare/v0.7.0...v0.8.0
