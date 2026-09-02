@@ -188,6 +188,31 @@ func TestParse_MalformedFrameLine_NonNumericGroup_ReturnsLineNumberedError(t *te
 	}
 }
 
+// TestParse_FrameLineBlankTime_DefaultsToZero covers a real-file shape found
+// by backlog item 007's corpus scan ("XX'GARAGE'XX"'s Action 1): a frame
+// line with a blank (whitespace-only) time field instead of a number — a
+// real-world authoring slip, not corrupt data. Defaults to 0, the same
+// "absent numeric value reads as its zero value" convention already applied
+// elsewhere in this parser.
+func TestParse_FrameLineBlankTime_DefaultsToZero(t *testing.T) {
+	src := "[Begin Action 1]\n3,0,0,2, ,as156d256\n"
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	anim, ok := s.Animations[1]
+	if !ok || len(anim.Frames) != 1 {
+		t.Fatalf("expected 1 frame in action 1, got %+v", s.Animations[1])
+	}
+	frame := anim.Frames[0]
+	if frame.Sprite != (SpriteRef{Group: 3, Image: 0}) {
+		t.Errorf("expected Sprite {3,0}, got %+v", frame.Sprite)
+	}
+	if frame.Time != 0 {
+		t.Errorf("expected Time 0 for a blank time field, got %d", frame.Time)
+	}
+}
+
 func TestSerialize_WritesBeginActionBlocksForReferencedElements_ReparsingToEquivalentResult(t *testing.T) {
 	s := Stage{
 		Elements: []BGElement{

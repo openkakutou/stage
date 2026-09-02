@@ -1,0 +1,88 @@
+[Info]
+name = "The_Great_Cave_Offensive"
+displayname = "SSB WIIU - The Great Cave Offensive" ;Name to display
+versiondate = 09,30,2009  	     ;Version date of stage (MM,DD,YYYY or X.XX)
+mugenversion = 1.1                   ;Version of M.U.G.E.N stage works on (X.XX)
+author = "PabloSSB aka Mr. Schllyay" ;Stage author name
+
+[Camera]
+startx 		= 0
+starty 		= 0
+boundleft 	= -130
+boundright 	= 140
+boundhigh 	= -250
+boundlow 	= 0
+tensionhigh =240
+tensionlow= 60
+tension = 50
+overdrawhigh = 0
+overdrawlow = 0
+floortension = 60
+verticalfollow = .95
+startzoom = 1,1
+zoomout = 0.50
+zoomin = 0.50
+
+[PlayerInfo]
+p1startx = -270
+p1starty = 0 
+p1facing = 1
+p2startx = 270
+p2starty = 0 
+p2facing = -1
+p3startx = -290
+p3starty = 0 
+p3facing = 1
+p4startx = 290
+p4starty = 0 
+p4facing = -1
+leftbound  = -8000
+rightbound =  8000
+
+[Bound]
+screenleft 	= 0
+screenright 	= 0
+
+[StageInfo]
+zoffset 	= 555.0
+autoturn 	= 1
+resetBG 	= 0
+localcoord 	= 1280,720
+
+[Scaling]
+topz     	= 0
+botz     	= 50
+topscale 	= 1
+botscale 	= 1.2
+
+[Shadow]
+color 		= 0,0,0
+yscale 		= .2
+
+[Music]
+bgmusic 	= ../../stages/The_Great_Cave_Offensive/The_Great_Cave_Offensive.mp3
+bgvolume 	= 255
+
+[BGdef]
+spr 		= The_Great_Cave_Offensive.sff
+debugbg 	= 0
+
+[BG BackGround]
+type  = normal
+spriteno = 2,0
+delta = 1, 1
+start = 0,-235
+mask = 1
+layerno = 0
+scalestart = 1.60,1.60
+tilespacing = 1, 0
+
+[BG Floor]
+type  = normal
+spriteno = 1,0
+delta = 1, 1
+start = 0,-235
+mask = 1
+layerno = 0
+scalestart = 1.60,1.60
+tilespacing = 1, 0

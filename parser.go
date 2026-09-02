@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -167,7 +168,7 @@ func Parse(r io.Reader) (Stage, error) {
 				}
 				stage.BGdef.LocalCoordWidth, stage.BGdef.LocalCoordHeight = w, h
 			case strings.EqualFold(key, "zoffset"):
-				n, err := strconv.Atoi(strings.TrimSpace(value))
+				n, err := parseIntTolerant(value)
 				if err != nil {
 					return Stage{}, fmt.Errorf("stage: line %d: invalid zoffset %q: %w", lineNumber, value, err)
 				}
@@ -462,13 +463,13 @@ func parseBGElementKey(el *BGElement, key, value string, lineNumber int) error {
 		}
 		el.DeltaX, el.DeltaY = x, y
 	case strings.EqualFold(key, "tile"):
-		x, y, err := parseIntPair(value)
+		x, y, err := parseIntPairOrSingle(value)
 		if err != nil {
 			return fmt.Errorf("stage: line %d: invalid tile %q: %w", lineNumber, value, err)
 		}
 		el.TileX, el.TileY = x, y
 	case strings.EqualFold(key, "tilespacing"):
-		x, y, err := parseIntPair(value)
+		x, y, err := parseIntPairOrSingle(value)
 		if err != nil {
 			return fmt.Errorf("stage: line %d: invalid tilespacing %q: %w", lineNumber, value, err)
 		}
@@ -497,9 +498,17 @@ func parseBGAnimFrameLine(line string) (BGAnimFrame, error) {
 	if err != nil {
 		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid image: %w", line, err)
 	}
-	timeVal, err := strconv.Atoi(strings.TrimSpace(fields[4]))
-	if err != nil {
-		return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid time: %w", line, err)
+	// A blank time field (backlog item 007's corpus scan found a real file,
+	// "XX'GARAGE'XX", with one) defaults to 0 rather than erroring — a
+	// real-world authoring slip, the same "absent numeric value reads as
+	// its zero value" tolerance already applied elsewhere in this parser.
+	timeStr := strings.TrimSpace(fields[4])
+	var timeVal int
+	if timeStr != "" {
+		timeVal, err = strconv.Atoi(timeStr)
+		if err != nil {
+			return BGAnimFrame{}, fmt.Errorf("malformed frame line %q: invalid time: %w", line, err)
+		}
 	}
 	return BGAnimFrame{Sprite: SpriteRef{Group: group, Image: image}, Time: timeVal}, nil
 }
@@ -519,6 +528,41 @@ func parseIntPair(value string) (a, b int, err error) {
 		return 0, 0, err
 	}
 	return a, b, nil
+}
+
+// parseIntTolerant parses value as an integer, falling back to parsing it
+// as a float and rounding to the nearest integer when the plain-integer
+// parse fails. A real-file shape (backlog item 007's corpus scan, `zoffset
+// = 555.0`): some stage authors write an integer-valued field with a
+// redundant decimal point. Genuinely non-numeric input still errors —
+// this only accepts an otherwise-valid number, never garbage.
+func parseIntTolerant(value string) (int, error) {
+	trimmed := strings.TrimSpace(value)
+	if n, err := strconv.Atoi(trimmed); err == nil {
+		return n, nil
+	}
+	f, err := strconv.ParseFloat(trimmed, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int(math.Round(f)), nil
+}
+
+// parseIntPairOrSingle parses a "a,b" comma-separated pair of integers, the
+// same shape parseIntPair does — except a bare single value (no comma) is
+// also accepted and applied to both a and b. A real-file shape (backlog
+// item 007's corpus scan, `tile = 1` on a BG element): some stage authors
+// write a single value for a symmetric property instead of the documented
+// pair, matching the "a,b" pair's own convention when both axes are equal.
+func parseIntPairOrSingle(value string) (a, b int, err error) {
+	if !strings.Contains(value, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return 0, 0, err
+		}
+		return n, n, nil
+	}
+	return parseIntPair(value)
 }
 
 // parseFloatPair parses a "a,b" comma-separated pair of floats.

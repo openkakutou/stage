@@ -142,6 +142,84 @@ tilespacing = 16,0
 	}
 }
 
+// TestParse_TileSingleValue_AppliesToBothAxes covers a real-file shape found
+// by backlog item 007's corpus scan ("Otherworldly Forest"'s cloud layer):
+// `tile` given as a single bare value instead of the documented "a,b" pair —
+// applied to both axes, the same shorthand-to-symmetric convention already
+// established for `tile`'s own real-world authoring habits.
+func TestParse_TileSingleValue_AppliesToBothAxes(t *testing.T) {
+	src := `[BG cloud]
+type = normal
+spriteno = 0,0
+tile = 1
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(s.Elements) != 1 {
+		t.Fatalf("expected 1 Element, got %d", len(s.Elements))
+	}
+	el := s.Elements[0]
+	if el.TileX != 1 || el.TileY != 1 {
+		t.Errorf("expected TileX/TileY 1/1, got %d/%d", el.TileX, el.TileY)
+	}
+}
+
+// TestParse_TileSpacingSingleValue_AppliesToBothAxes mirrors
+// TestParse_TileSingleValue_AppliesToBothAxes for `tilespacing` — the same
+// real file's corpus scan found the identical single-value shorthand on a
+// second BG element's `tilespacing` key, confirming this isn't a `tile`-only
+// quirk but the same authoring habit applied to a sibling key.
+func TestParse_TileSpacingSingleValue_AppliesToBothAxes(t *testing.T) {
+	src := `[BG grid]
+type = normal
+spriteno = 0,0
+tilespacing = 10
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(s.Elements) != 1 {
+		t.Fatalf("expected 1 Element, got %d", len(s.Elements))
+	}
+	el := s.Elements[0]
+	if el.TileSpacingX != 10 || el.TileSpacingY != 10 {
+		t.Errorf("expected TileSpacingX/TileSpacingY 10/10, got %d/%d", el.TileSpacingX, el.TileSpacingY)
+	}
+}
+
+// TestParse_ZOffsetAsDecimal_IsRoundedToInt covers a real-file shape found by
+// backlog item 007's corpus scan ("The_Great_Cave_Offensive"): `zoffset`
+// written with a redundant decimal point ("555.0") even though it's an
+// integer field — a real-world authoring habit, not corrupt data.
+func TestParse_ZOffsetAsDecimal_IsRoundedToInt(t *testing.T) {
+	src := `[StageInfo]
+zoffset = 555.0
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.BGdef.ZOffset != 555 {
+		t.Errorf("expected ZOffset 555, got %d", s.BGdef.ZOffset)
+	}
+}
+
+// TestParse_ZOffsetAsNonIntegerDecimal_ReturnsError confirms the tolerance
+// above stays narrow: a decimal value that doesn't round to a clean integer
+// intent (or plain garbage) still errors rather than silently truncating.
+func TestParse_ZOffsetAsNonIntegerDecimal_ReturnsError(t *testing.T) {
+	src := `[StageInfo]
+zoffset = not-a-number
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric zoffset")
+	}
+}
+
 func TestParse_MissingTypeKey_DefaultsElementToNormal(t *testing.T) {
 	src := `[BG plain]
 spriteno = 4,0

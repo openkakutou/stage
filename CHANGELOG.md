@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Consuming apps can now resolve a stage's background sprites into actual displayable pixels directly through the WASM build, for as many sprites as needed in a single call, with support for previewing an alternate color palette. A sprite that doesn't exist, or a corrupted sprite sheet, is reported with a clear error instead of breaking the preview.
 
+### Fixed
+
+- Loading is now validated against a large corpus of real MUGEN/Ikemen GO stage files, and three real-file loading bugs this uncovered are fixed: a background layer's tiling settings written as a single shorthand value, a stage's ground-level setting written with a decimal point, and a background animation frame with a blank timing value all now load correctly instead of being rejected.
+
 ## [0.10.0] - 2026-08-29
 
 ### Added

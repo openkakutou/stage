@@ -1,0 +1,92 @@
+; Stage assets are copyright Arc System Works TEAM RED (c) 2013. You should buy their games, they're pretty cool :)
+; Big thanks to the creators of QuickBMS and UModel for making this stage rip possible!
+;--------------------------------------------------------
+[Info]
+name = "Guilty Gear Xrd - Neo New York"
+displayname = "Neo New York"
+versiondate = 03,12,2024
+mugenversion = 1.1
+author = "SuperFromND"
+
+;--------------------------------------------------------
+[Camera]
+startx = 0
+starty = 0
+boundleft = -700
+boundright = 700
+boundhigh = -2500
+boundlow = 0
+verticalfollow = .85
+floortension = 200
+tension = 200
+overdrawhigh = 120
+overdrawlow = 120
+cuthigh = 0
+cutlow = 0
+zoomout = .75
+zoomin = 1
+fov = 30
+
+;--------------------------------------------------------
+[PlayerInfo]
+;--- Player 1 ---
+p1startx = -280
+p1starty = 0
+p1facing = 1
+
+;--- Player 2 ---
+p2startx = 280
+p2starty = 0
+p2facing = -1
+
+;--- Common ---
+leftbound  = -4000
+rightbound =  4000
+
+;--------------------------------------------------------
+[Bound]
+screenleft = 60
+screenright = 60
+
+;--------------------------------------------------------
+[StageInfo]
+zoffset = 660
+
+autoturn = 1
+resetBG = 1
+
+localcoord = 1280, 720
+xscale = 1
+yscale = 1
+
+portraitscale = 1
+
+;--------------------------------------------------------
+[Shadow]
+intensity = 192
+color = 0,0,16 ;Shadows in XRD are a tad blue on this stage to make them pop out a bit more.
+yscale = .1
+
+;--------------------------------------------------------
+[Reflection]
+intensity = 0
+
+;--------------------------------------------------------
+[Music]
+bgmusic = ../../stages/Guilty Gear Xrd - Neo New York/GuiltyGearXrdMagnoliaEclair.ogg
+bgmvolume = 100
+
+;========================================================
+[BGdef]
+model = ggxrd-neonewyork.glb
+spr = ggxrd-neonewyork.sff
+
+;-------------------------------------
+[Model]
+offset = 0,-0.195,-0.85
+scale = 1, 1, 1
+
+;-------------------------------------
+; Stage portrait data
+[Begin Action 9000]
+9000,1, 0,0,-1
