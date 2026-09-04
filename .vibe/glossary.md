@@ -25,8 +25,8 @@ The range characters are allowed to move within during a match — distinct from
 _Sources: `bounds.go`, `.vibe/decisions/001-stage-boundaries-model-left-right-only.md`_
 
 ## Local coordinate space
-The pixel coordinate system a stage's positions (BG element placement, ground level) are expressed in, independent of the actual resolution the stage is rendered at.
-_Sources: `bgdef.go`_
+The pixel coordinate system a stage's positions (BG element placement, ground level) are expressed in, independent of the actual resolution the stage is rendered at. A stage may author its BG element sprite art at a different resolution than this space and reconcile the two with a draw-time scale factor (`BGdef.XScale`/`YScale`, defaulting to 1 — no scaling — when unspecified).
+_Sources: `bgdef.go`, `parser.go`_
 
 ## Model-based stage
 A stage rendered from a 3D model instead of 2D sprite layers — Ikemen GO's 3D stage extension. Identified by whether the stage references a model file at all; a stage with none is a traditional 2D (sprite-based) stage and every 3D-only setting stays unused.

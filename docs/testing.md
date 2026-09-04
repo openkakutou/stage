@@ -14,14 +14,17 @@ co-located with the source they test, one file per source file
 
 ## Fixture-driven tests against real files
 
-Two real, unmodified stage `.def` files are vendored under `testdata/` (see
-`testdata/README.md`): `mugen-2d-stage.def`, a real MUGEN 1.1 stage with no
-3D content, and `ikemen-go-3d-model-stage.def`, a real Ikemen GO 3D
-model-based stage (`[Model]`, `fov`, a stage-portrait animation block).
-`corpus_fixtures_test.go` exercises `Parse`, `Document`'s byte-exact round
-trip, and `SerializeDef`'s byte-exact-on-unmodified-save round trip against
-both — real-world comment placement, spacing, and section ordering that
-hand-built synthetic fixtures don't reliably reproduce.
+Three real, unmodified stage `.def` files are vendored under `testdata/`
+(see `testdata/README.md`): `mugen-2d-stage.def`, a real MUGEN 1.1 stage
+with no 3D content; `ikemen-go-3d-model-stage.def`, a real Ikemen GO 3D
+model-based stage (`[Model]`, `fov`, a stage-portrait animation block); and
+`mugen-nondefault-scale-stage.def`, a real stage authoring hi-res BG
+sprite art and relying on `[StageInfo]`'s `xscale`/`yscale` to scale it
+down at draw time. `corpus_fixtures_test.go` exercises `Parse`,
+`Document`'s byte-exact round trip, and `SerializeDef`'s
+byte-exact-on-unmodified-save round trip against all three — real-world
+comment placement, spacing, and section ordering that hand-built
+synthetic fixtures don't reliably reproduce.
 
 ## Real-file corpus compatibility scan
 

@@ -220,6 +220,74 @@ zoffset = not-a-number
 	}
 }
 
+// TestParse_StageInfoXScaleYScale_ParsesNonDefaultValues covers backlog item
+// 012: a real Ikemen GO stage (Dengeki_Subway.def) authors BG sprite art
+// larger than localcoord and relies on "[StageInfo]"'s xscale/yscale to
+// scale it down at draw time. The leading-dot decimal shape (".35", no
+// leading zero) is exactly how that real file writes it, and
+// strconv.ParseFloat already accepts it without any extra tolerance.
+func TestParse_StageInfoXScaleYScale_ParsesNonDefaultValues(t *testing.T) {
+	src := `[StageInfo]
+localcoord = 320,240
+xscale = .35
+yscale = .35
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.BGdef.XScale != 0.35 || s.BGdef.YScale != 0.35 {
+		t.Errorf("expected XScale/YScale 0.35/0.35, got %v/%v", s.BGdef.XScale, s.BGdef.YScale)
+	}
+}
+
+// TestParse_StageInfoWithoutXScaleYScaleKeys_DefaultsToOne covers the
+// "keys absent from [StageInfo]" case backlog item 012 requires: MUGEN/
+// Ikemen GO themselves default an omitted xscale/yscale to 1 (no scaling).
+func TestParse_StageInfoWithoutXScaleYScaleKeys_DefaultsToOne(t *testing.T) {
+	src := `[StageInfo]
+localcoord = 320,240
+zoffset = 200
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.BGdef.XScale != 1 || s.BGdef.YScale != 1 {
+		t.Errorf("expected XScale/YScale to default to 1/1, got %v/%v", s.BGdef.XScale, s.BGdef.YScale)
+	}
+}
+
+// TestParse_NoStageInfoSection_LeavesXScaleYScaleAtZeroValue confirms the
+// xscale/yscale default is scoped to a present-but-key-omitting
+// "[StageInfo]" section, not applied speculatively whenever the section is
+// missing entirely — consistent with TestParse_EmptyInput_ReturnsZeroValueStageAndNoError's
+// existing zero-value guarantee for the rest of BGdef.
+func TestParse_NoStageInfoSection_LeavesXScaleYScaleAtZeroValue(t *testing.T) {
+	src := `[Info]
+name = "No StageInfo Here"
+`
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.BGdef.XScale != 0 || s.BGdef.YScale != 0 {
+		t.Errorf("expected XScale/YScale to stay at the zero value 0/0 with no [StageInfo] section, got %v/%v", s.BGdef.XScale, s.BGdef.YScale)
+	}
+}
+
+// TestParse_StageInfoXScaleInvalidValue_ReturnsError confirms a genuinely
+// non-numeric xscale still errors rather than silently defaulting.
+func TestParse_StageInfoXScaleInvalidValue_ReturnsError(t *testing.T) {
+	src := `[StageInfo]
+xscale = not-a-number
+`
+	_, err := Parse(strings.NewReader(src))
+	if err == nil {
+		t.Fatal("expected an error for a non-numeric xscale")
+	}
+}
+
 func TestParse_MissingTypeKey_DefaultsElementToNormal(t *testing.T) {
 	src := `[BG plain]
 spriteno = 4,0

@@ -40,6 +40,7 @@ Stage-level settings, sourced from the `.def` `[BGDef]`, `[StageInfo]`, and
 | `SpriteFile` | `[BGDef]` `spr` | Path to the stage's `.sff` sprite sheet |
 | `LocalCoordWidth`, `LocalCoordHeight` | `[StageInfo]` `localcoord` | Coordinate space element positions are expressed in |
 | `ZOffset` | `[StageInfo]` `zoffset` | Ground level's vertical distance from the top of the local coordinate space |
+| `XScale`, `YScale` | `[StageInfo]` `xscale`/`yscale` | Horizontal/vertical factor applied when drawing this stage's 2D BG element sprites — lets a stage author sprite art at a resolution other than `LocalCoordWidth`/`LocalCoordHeight` and scale it down (or up) at draw time. Default to `1` (no scaling) when `[StageInfo]` is present but omits them; stay at the Go zero value (`0`) when the file has no `[StageInfo]` section at all (see `.vibe/decisions/009`) |
 | `ZoomOut`, `ZoomIn` | `[Camera]` `zoomout`/`zoomin` | Camera's zoom scale range |
 | `ModelFile` | `[BGDef]` `model` | Path to the stage's 3D model file (`.gltf`/`.glb`) — Ikemen GO extension, empty for a 2D stage |
 | `Near`, `Far`, `FOV`, `YShift` | `[Camera]` `near`/`far`/`fov`/`yshift` | 3D-only camera settings applied when rendering a model-based stage |

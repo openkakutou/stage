@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stages that author their background art at a resolution other than the stage's own coordinate space, and rely on a horizontal/vertical scale-down factor to draw it correctly, now have that factor read and preserved instead of silently dropped — fixing background layers rendering hugely oversized (or undersized) and overflowing the visible area on affected stages.
+
 ## [0.11.1] - 2026-09-02
 
 ### Fixed

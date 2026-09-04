@@ -90,13 +90,42 @@ func TestParse_RealIkemenGoOnlyFixture_DecodesCorrectly(t *testing.T) {
 	}
 }
 
+// TestParse_RealNonDefaultScaleFixture_DecodesXScaleYScale exercises Parse
+// against a real, unmodified stage that authors hi-res BG sprite art and
+// relies on "[StageInfo]"'s xscale/yscale to scale it down at draw time
+// (backlog item 012) — see testdata/README.md for provenance.
+func TestParse_RealNonDefaultScaleFixture_DecodesXScaleYScale(t *testing.T) {
+	data := readTestdataFile(t, "mugen-nondefault-scale-stage.def")
+
+	s, err := Parse(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if s.Name != "Dengeki_Military Subway" {
+		t.Errorf("expected Name %q, got %q", "Dengeki_Military Subway", s.Name)
+	}
+	// The real file writes "xscale = .35" / "yscale = .35" -- the exact
+	// real-world shape (leading-dot decimal, no leading zero) this item's
+	// bug report was filed against.
+	if s.BGdef.XScale != 0.35 || s.BGdef.YScale != 0.35 {
+		t.Errorf("expected XScale/YScale 0.35/0.35, got %v/%v", s.BGdef.XScale, s.BGdef.YScale)
+	}
+	if len(s.Elements) != 11 {
+		t.Fatalf("expected 11 BG elements, got %d", len(s.Elements))
+	}
+	if _, ok := s.Animations[1]; !ok {
+		t.Errorf("expected Animations to include action 1, got %v", s.Animations)
+	}
+}
+
 // TestDocument_RealFixtures_RoundTripByteExact confirms both real, vendored
 // fixtures satisfy the same byte-exact-on-unmodified-content guarantee
 // Document promises for hand-built synthetic fixtures — a real file's own
 // comment placement, blank lines, and section ordering are exactly the
 // kind of shape synthetic test data doesn't reliably exercise.
 func TestDocument_RealFixtures_RoundTripByteExact(t *testing.T) {
-	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def"} {
+	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def"} {
 		t.Run(name, func(t *testing.T) {
 			data := readTestdataFile(t, name)
 
@@ -119,7 +148,7 @@ func TestDocument_RealFixtures_RoundTripByteExact(t *testing.T) {
 // SerializeDef's own byte-exact-when-unmodified guarantee (decision 005)
 // holds for both real, vendored fixtures, not just hand-built ones.
 func TestSerializeDef_RealFixtures_UnmodifiedSaveIsByteExact(t *testing.T) {
-	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def"} {
+	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def"} {
 		t.Run(name, func(t *testing.T) {
 			data := readTestdataFile(t, name)
 

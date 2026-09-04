@@ -187,6 +187,31 @@ func TestSerialize_AnimElement_OmitsSpriteNoWritesActionNo(t *testing.T) {
 	}
 }
 
+// TestSerialize_NonDefaultXScaleYScale_WritesAndRoundTrips covers backlog
+// item 012: BGdef.XScale/YScale must actually reach "[StageInfo]"'s output,
+// not just BGdef's data model, and survive a re-parse.
+func TestSerialize_NonDefaultXScaleYScale_WritesAndRoundTrips(t *testing.T) {
+	s := Stage{BGdef: BGdef{LocalCoordWidth: 320, LocalCoordHeight: 240, XScale: 0.35, YScale: 0.35}}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+
+	if !strings.Contains(strings.ToLower(output), "xscale = 0.35") || !strings.Contains(strings.ToLower(output), "yscale = 0.35") {
+		t.Errorf("expected xscale/yscale 0.35 in output, got:\n%s", output)
+	}
+
+	got, err := Parse(strings.NewReader(output))
+	if err != nil {
+		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, output)
+	}
+	if got.BGdef.XScale != 0.35 || got.BGdef.YScale != 0.35 {
+		t.Errorf("expected XScale/YScale 0.35/0.35 after round trip, got %v/%v", got.BGdef.XScale, got.BGdef.YScale)
+	}
+}
+
 func TestSerialize_NormalElement_OmitsActionNoWritesSpriteNo(t *testing.T) {
 	s := Stage{Elements: []BGElement{
 		{Name: "sky", Type: BGElementNormal, Sprite: SpriteRef{Group: 3, Image: 1}},

@@ -28,7 +28,9 @@ var actionHeaderAttemptPattern = regexp.MustCompile(`(?i)^\[\s*begin(\s|\]|$)`)
 // Only sections this data model has a place for are recognized:
 // "[Info]" (Stage.Name/Author), "[BGDef]" (BGdef.SpriteFile plus, for a
 // model-based stage, its ModelFile), "[StageInfo]" (BGdef's local
-// coordinate space and ground level), "[Camera]" (CameraBounds plus
+// coordinate space, ground level, and 2D BG element draw-time scale factor
+// — xscale/yscale default to 1 when the section is present but omits
+// them), "[Camera]" (CameraBounds plus
 // BGdef's zoom range and, for a model-based stage, its Near/Far/FOV/
 // YShift), "[PlayerInfo]" (StageBoundaries, plus its z-axis extension and
 // PlayerStartZ for a model-based stage), "[Model]" and "[Scaling]"
@@ -117,6 +119,16 @@ func Parse(r io.Reader) (Stage, error) {
 				return Stage{}, fmt.Errorf("stage: line %d: malformed action header %q", lineNumber, line)
 			}
 			currentSection = strings.ToLower(raw)
+			if currentSection == "stageinfo" {
+				// MUGEN/Ikemen GO default an omitted xscale/yscale to 1
+				// (no scaling). Applied as soon as the section starts so
+				// an explicit key below overrides it; a file with no
+				// "[StageInfo]" section at all leaves BGdef.XScale/YScale
+				// at their Go zero value instead (see
+				// TestParse_NoStageInfoSection_LeavesXScaleYScaleAtZeroValue).
+				stage.BGdef.XScale = 1
+				stage.BGdef.YScale = 1
+			}
 			continue
 		}
 
@@ -173,6 +185,18 @@ func Parse(r io.Reader) (Stage, error) {
 					return Stage{}, fmt.Errorf("stage: line %d: invalid zoffset %q: %w", lineNumber, value, err)
 				}
 				stage.BGdef.ZOffset = n
+			case strings.EqualFold(key, "xscale"):
+				f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+				if err != nil {
+					return Stage{}, fmt.Errorf("stage: line %d: invalid xscale %q: %w", lineNumber, value, err)
+				}
+				stage.BGdef.XScale = f
+			case strings.EqualFold(key, "yscale"):
+				f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+				if err != nil {
+					return Stage{}, fmt.Errorf("stage: line %d: invalid yscale %q: %w", lineNumber, value, err)
+				}
+				stage.BGdef.YScale = f
 			}
 		case "camera":
 			if err := parseCameraKey(&stage, key, value, lineNumber); err != nil {

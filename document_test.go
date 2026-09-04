@@ -78,6 +78,35 @@ zoffset = 220
 	}
 }
 
+// TestParseDocument_XScaleYScaleFixture_DecodesAndSerializeReproducesByteForByte
+// covers backlog item 012's Document/SerializeDef acceptance criterion: a
+// file that does touch xscale/yscale must decode them into BGdef and still
+// round-trip byte-exact through Document when left unmodified.
+func TestParseDocument_XScaleYScaleFixture_DecodesAndSerializeReproducesByteForByte(t *testing.T) {
+	src := `[StageInfo]
+localcoord = 320,240
+xscale = .35
+yscale = .35
+`
+
+	doc, err := ParseDocument(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if doc.Stage.BGdef.XScale != 0.35 || doc.Stage.BGdef.YScale != 0.35 {
+		t.Errorf("expected decoded XScale/YScale 0.35/0.35, got %v/%v", doc.Stage.BGdef.XScale, doc.Stage.BGdef.YScale)
+	}
+
+	var buf bytes.Buffer
+	if err := doc.Serialize(&buf); err != nil {
+		t.Fatalf("unexpected error serializing: %v", err)
+	}
+	if buf.String() != src {
+		t.Errorf("expected byte-for-byte reproduction of source.\n--- want ---\n%s\n--- got ---\n%s", src, buf.String())
+	}
+}
+
 func TestParseDocument_EmptyInput_SerializeReproducesEmptySource(t *testing.T) {
 	doc, err := ParseDocument(strings.NewReader(""))
 	if err != nil {

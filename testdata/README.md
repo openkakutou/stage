@@ -28,6 +28,17 @@ GO 3D model-based stage: `[Model]` section, `BGdef.ModelFile`
 stage-portrait animation block composing correctly alongside the 3D-only
 sections.
 
+## `mugen-nondefault-scale-stage.def`
+
+`Dengeki_Subway.def` ("Dengeki_Military Subway", `mugenversion = 1.1`, no
+Ikemen GO 3D extension) — a real stage authoring hi-res BG sprite art
+larger than its `localcoord` and relying on `[StageInfo]`'s `xscale =
+.35` / `yscale = .35` to scale it down at draw time (backlog item 012).
+The leading-dot decimal shape (`.35`, no leading zero) is exactly how the
+real file writes it. Also exercises a `[Begin Action 1]` block alongside
+a plain 2D `[StageInfo]` (no 3D extension), and a lowercase `[BGdef]`
+section header.
+
 ## Regenerating / adding a new fixture
 
 There is no dedicated trimming tool the way `sff`'s `testdata/gen` is —

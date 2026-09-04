@@ -26,6 +26,7 @@ Stage-level settings sourced from `.def` `[BGDef]`/`[StageInfo]`/`[Camera]`.
 | LocalCoordWidth | int | `[StageInfo]` `localcoord` (1st value) |
 | LocalCoordHeight | int | `[StageInfo]` `localcoord` (2nd value) |
 | ZOffset | int | `[StageInfo]` `zoffset` |
+| XScale, YScale | float64 | `[StageInfo]` `xscale`/`yscale` — default to 1 when `[StageInfo]` is present but omits them, stay at the Go zero value if the section is absent entirely |
 | ZoomOut | float64 | `[Camera]` `zoomout` |
 | ZoomIn | float64 | `[Camera]` `zoomin` |
 | ModelFile | string | `[BGDef]` `model` (Ikemen GO 3D extension, empty for a 2D stage) |

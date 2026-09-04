@@ -42,4 +42,16 @@ type BGdef struct {
 	Far    float64 `json:"far"`
 	FOV    float64 `json:"fov"`
 	YShift float64 `json:"yShift"`
+	// XScale and YScale are the horizontal and vertical factors applied
+	// when drawing this stage's 2D BG element sprites (.def [StageInfo]
+	// "xscale"/"yscale"), letting a stage author sprite art at a
+	// resolution other than LocalCoordWidth/LocalCoordHeight and scale it
+	// down (or up) at draw time — e.g. hi-res art authored at roughly 3x
+	// LocalCoordWidth/Height with xscale/yscale around 0.35. Parse
+	// defaults both to 1 (no scaling) when a "[StageInfo]" section is
+	// present but omits these keys, matching MUGEN/Ikemen GO's own
+	// default; the Go zero value (0) is only ever observed on a BGdef
+	// built directly rather than through Parse.
+	XScale float64 `json:"xScale"`
+	YScale float64 `json:"yScale"`
 }

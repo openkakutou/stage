@@ -28,7 +28,7 @@ tolerated and ignored rather than rejected:
 |---|---|
 | `[Info]` | `Name`, `Author` |
 | `[BGDef]` | `BGdef.SpriteFile`, `BGdef.ModelFile` |
-| `[StageInfo]` | `BGdef.LocalCoordWidth`/`LocalCoordHeight`/`ZOffset` |
+| `[StageInfo]` | `BGdef.LocalCoordWidth`/`LocalCoordHeight`/`ZOffset`/`XScale`/`YScale` |
 | `[Camera]` | `CameraBounds`, `BGdef.ZoomOut`/`ZoomIn`, `BGdef.Near`/`Far`/`FOV`/`YShift` |
 | `[PlayerInfo]` | `StageBoundaries` (including its `TopBound`/`BottomBound`), `PlayerStartZ` |
 | `[Model]` | `Model` — Ikemen GO's 3D model placement/lighting settings |
@@ -55,6 +55,10 @@ engines accept both.
   `BGElementNormal`, matching MUGEN's own behavior for a missing type — an
   unrecognized `type` value falls back to the same default rather than
   erroring.
+- A `[StageInfo]` section present but omitting `xscale`/`yscale` defaults
+  `BGdef.XScale`/`YScale` to `1` (no scaling), matching MUGEN/Ikemen GO's
+  own default — a file with no `[StageInfo]` section at all leaves them at
+  their Go zero value instead (see `.vibe/decisions/009`).
 - Comment lines (`;`, whole-line or trailing) are stripped before parsing.
 - A value may optionally be wrapped in double quotes, which are removed.
 - An empty input returns a zero-value `Stage` and a `nil` error.

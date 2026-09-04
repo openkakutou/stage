@@ -168,6 +168,12 @@ func writeStageInfoSection(w io.Writer, bgdef BGdef) error {
 	if _, err := fmt.Fprintf(w, "zoffset = %d\n", bgdef.ZOffset); err != nil {
 		return fmt.Errorf("stage: writing zoffset: %w", err)
 	}
+	if _, err := fmt.Fprintf(w, "xscale = %s\n", formatStageFloat(bgdef.XScale)); err != nil {
+		return fmt.Errorf("stage: writing xscale: %w", err)
+	}
+	if _, err := fmt.Fprintf(w, "yscale = %s\n", formatStageFloat(bgdef.YScale)); err != nil {
+		return fmt.Errorf("stage: writing yscale: %w", err)
+	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("stage: writing section separator: %w", err)
 	}

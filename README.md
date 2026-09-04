@@ -17,6 +17,7 @@ Available now:
 - Resolving which frame each animated background layer should currently show, for as many layers as needed in one call, directly from a web browser — no need to reimplement the frame-timing logic in JavaScript
 - Resolving a stage's background sprites into actual displayable pixels directly from a web browser, for as many sprites as needed in one call, with support for previewing an alternate color palette — a missing sprite or a corrupted sprite sheet is reported with a clear error instead of breaking the preview
 - Loading is validated against a large corpus of real MUGEN and Ikemen GO stage files, not just hand-built test data — real-world authoring habits like a shorthand tiling value, a decimal point on a whole-number setting, or a blank animation timing value are all read correctly instead of being rejected
+- Reading a stage's horizontal/vertical scale-down factor for background art authored at a different resolution than the stage's own coordinate space, instead of silently dropping it — real stages that rely on this factor now read and write correctly instead of rendering hugely oversized (or undersized) backgrounds
 <!-- vibe:end:features -->
 
 <!-- vibe:begin:install -->
