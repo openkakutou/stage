@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 # Parse StageInfo xscale/yscale into BGdef
 
