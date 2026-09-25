@@ -6,7 +6,8 @@ import (
 )
 
 // Serialize writes s to w as MUGEN/Ikemen GO stage .def text: an "[Info]"
-// section, a "[BGDef]" section, a "[Model]" section, a "[StageInfo]"
+// section, a "[Music]" section (omitted entirely when s.MusicFile is
+// empty), a "[BGDef]" section, a "[Model]" section, a "[StageInfo]"
 // section, a "[Camera]" section, a "[Scaling]" section, a "[PlayerInfo]"
 // section, then one "[BG <name>]" section per element in slice order.
 //
@@ -34,6 +35,9 @@ func Serialize(w io.Writer, s Stage) error {
 	is3D := s.BGdef.ModelFile != ""
 
 	if err := writeInfoSection(w, s); err != nil {
+		return err
+	}
+	if err := writeMusicSection(w, s); err != nil {
 		return err
 	}
 	if err := writeBGDefSection(w, s.BGdef); err != nil {
@@ -82,6 +86,28 @@ func writeInfoSection(w io.Writer, s Stage) error {
 		if _, err := fmt.Fprintf(w, "author = %q\n", s.Author); err != nil {
 			return fmt.Errorf("stage: writing author: %w", err)
 		}
+	}
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("stage: writing section separator: %w", err)
+	}
+	return nil
+}
+
+// writeMusicSection writes a "[Music]" section holding s.MusicFile's
+// "bgmusic" line, or nothing at all when MusicFile is empty — unlike
+// "[Info]" (always emitted even when empty), "[Music]" is a genuinely
+// optional section in real .def files, so an unedited stage with no
+// background music serializes with no "[Music]" section at all rather than
+// an empty one.
+func writeMusicSection(w io.Writer, s Stage) error {
+	if s.MusicFile == "" {
+		return nil
+	}
+	if _, err := fmt.Fprintln(w, "[Music]"); err != nil {
+		return fmt.Errorf("stage: writing [Music] header: %w", err)
+	}
+	if _, err := fmt.Fprintf(w, "bgmusic = %s\n", s.MusicFile); err != nil {
+		return fmt.Errorf("stage: writing bgmusic: %w", err)
 	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("stage: writing section separator: %w", err)

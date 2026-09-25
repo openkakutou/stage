@@ -21,6 +21,7 @@ defines.
 |---|---|---|
 | `Name` | `string` | The stage's display name (`.def` `[Info]` `name`), empty if the file has no `[Info]` section or omits the key |
 | `Author` | `string` | The stage's author/creator (`.def` `[Info]` `author`), empty if the file has no `[Info]` section or omits the key |
+| `MusicFile` | `string` | Path to the stage's background music file (`.def` `[Music]` `bgmusic`), relative to the stage's own folder — empty if the file has no `[Music]` section, omits the key, or leaves it blank |
 | `BGdef` | `BGdef` | Stage-level settings (sprite sheet, coordinate space, ground level, camera zoom range) |
 | `Elements` | `[]BGElement` | BG elements/layers, in `.def` file order |
 | `Animations` | `map[int]BGAnimation` | Every `[Begin Action N]` block the file declared, keyed by action number — resolve a `BGElementAnim`'s `ActionNumber` against this to find its frame data; `nil` when the stage declares none |

@@ -1,6 +1,9 @@
 [Info]
 name = Training Room
 
+[Music]
+bgmusic = sound/theme.mp3
+
 [BGDef]
 spr = stage0.sff
 

@@ -50,6 +50,7 @@ assert(okResult.error === null, `nominal load reports no error (got: ${okResult.
 assert(typeof okResult.stage === "string", "nominal load returns a stage JSON string");
 
 const stage = JSON.parse(okResult.stage ?? "null");
+assert(stage?.musicFile === "sound/theme.mp3", `stage musicFile is "sound/theme.mp3" (got: ${stage?.musicFile})`);
 assert(stage?.bgDef?.spriteFile === "stage0.sff", `stage spriteFile is "stage0.sff" (got: ${stage?.bgDef?.spriteFile})`);
 assert(stage?.bgDef?.zOffset === 220, `stage zOffset is 220 (got: ${stage?.bgDef?.zOffset})`);
 assert(Array.isArray(stage?.elements) && stage.elements.length === 3, "stage has 3 BG elements");
@@ -62,6 +63,15 @@ const torchAnim = stage?.animations?.["200"];
 assert(torchAnim !== undefined, "stage.animations exposes the parsed action 200 block");
 assert(Array.isArray(torchAnim?.frames) && torchAnim.frames.length === 2, `action 200 has 2 frames (got: ${torchAnim?.frames?.length})`);
 assert(torchAnim?.frames?.[0]?.time === 10, `action 200's first frame lasts 10 ticks (got: ${torchAnim?.frames?.[0]?.time})`);
+
+// --- load: a .def with no [Music] section at all still loads successfully,
+// with musicFile left empty (backlog item 013's own acceptance criterion) ---
+const noMusicResult = globalThis.OpenKakutouStage.load(
+	new TextEncoder().encode("[Info]\nname = No Music Stage\n"),
+);
+assert(noMusicResult.error === null, `no-[Music]-section load reports no error (got: ${noMusicResult.error})`);
+const noMusicStage = JSON.parse(noMusicResult.stage ?? "null");
+assert(noMusicStage?.musicFile === "", `no-[Music]-section load has empty musicFile (got: ${JSON.stringify(noMusicStage?.musicFile)})`);
 
 // --- load: error path — malformed .def bytes, must not throw ---
 const errResult = globalThis.OpenKakutouStage.load(new TextEncoder().encode("[BGDef\nspr = x\n"));

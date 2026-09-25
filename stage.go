@@ -20,6 +20,12 @@ type Stage struct {
 	// Author is the stage's author/creator (.def [Info] "author"). Empty
 	// when the source .def has no [Info] section, or omits the key.
 	Author string `json:"author"`
+	// MusicFile is the path to this stage's background music file
+	// (typically .mp3/.ogg), relative to the stage's own folder, the same
+	// convention BGdef.SpriteFile uses for the sprite sheet reference
+	// (.def [Music] "bgmusic"). Empty when the source .def has no [Music]
+	// section, omits the key, or leaves it blank.
+	MusicFile string `json:"musicFile"`
 	// BGdef holds this stage's stage-level settings (sprite sheet,
 	// coordinate space, ground level, camera zoom range).
 	BGdef BGdef `json:"bgDef"`

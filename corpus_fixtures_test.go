@@ -38,6 +38,9 @@ func TestParse_RealMugenOnlyFixture_DecodesCorrectly(t *testing.T) {
 	if s.BGdef.ModelFile != "" {
 		t.Errorf("expected a 2D-only stage to have no ModelFile, got %q", s.BGdef.ModelFile)
 	}
+	if want := "../../stages/The_Great_Cave_Offensive/The_Great_Cave_Offensive.mp3"; s.MusicFile != want {
+		t.Errorf("expected MusicFile %q, got %q", want, s.MusicFile)
+	}
 	// The real file writes "zoffset = 555.0" — a decimal value for what's
 	// an integer field, one of this item's own real-file tolerance fixes.
 	if s.BGdef.ZOffset != 555 {
@@ -71,6 +74,11 @@ func TestParse_RealIkemenGoOnlyFixture_DecodesCorrectly(t *testing.T) {
 	}
 	if s.BGdef.ModelFile != "ggxrd-neonewyork.glb" {
 		t.Errorf("expected ModelFile %q, got %q", "ggxrd-neonewyork.glb", s.BGdef.ModelFile)
+	}
+	// Real, unquoted bgmusic value containing spaces -- confirms MusicFile
+	// decoding doesn't split on whitespace the way a naive parser might.
+	if want := "../../stages/Guilty Gear Xrd - Neo New York/GuiltyGearXrdMagnoliaEclair.ogg"; s.MusicFile != want {
+		t.Errorf("expected MusicFile %q, got %q", want, s.MusicFile)
 	}
 	if s.Model.OffsetX != 0 || s.Model.OffsetY != -0.195 || s.Model.OffsetZ != -0.85 {
 		t.Errorf("expected Model offset 0/-0.195/-0.85, got %v/%v/%v", s.Model.OffsetX, s.Model.OffsetY, s.Model.OffsetZ)
@@ -110,6 +118,12 @@ func TestParse_RealNonDefaultScaleFixture_DecodesXScaleYScale(t *testing.T) {
 	// bug report was filed against.
 	if s.BGdef.XScale != 0.35 || s.BGdef.YScale != 0.35 {
 		t.Errorf("expected XScale/YScale 0.35/0.35, got %v/%v", s.BGdef.XScale, s.BGdef.YScale)
+	}
+	// The real file also has a commented-out "; bgmusic = 3.da" line above
+	// the real one -- confirms the comment is stripped rather than mistaken
+	// for the actual value.
+	if want := "sound/Dengeki_Subway.mp3"; s.MusicFile != want {
+		t.Errorf("expected MusicFile %q, got %q", want, s.MusicFile)
 	}
 	if len(s.Elements) != 11 {
 		t.Fatalf("expected 11 BG elements, got %d", len(s.Elements))

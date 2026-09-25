@@ -78,6 +78,24 @@ zoffset = 220
 	}
 }
 
+func TestParseDocument_RealisticFixtureWithMusic_ExposesDecodedMusicFile(t *testing.T) {
+	src := `[Music]
+bgmusic = training.mp3
+
+[BGDef]
+spr = stage0.sff
+`
+
+	doc, err := ParseDocument(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if doc.Stage.MusicFile != "training.mp3" {
+		t.Errorf("expected decoded MusicFile %q, got %q", "training.mp3", doc.Stage.MusicFile)
+	}
+}
+
 // TestParseDocument_XScaleYScaleFixture_DecodesAndSerializeReproducesByteForByte
 // covers backlog item 012's Document/SerializeDef acceptance criterion: a
 // file that does touch xscale/yscale must decode them into BGdef and still
@@ -96,6 +114,33 @@ yscale = .35
 
 	if doc.Stage.BGdef.XScale != 0.35 || doc.Stage.BGdef.YScale != 0.35 {
 		t.Errorf("expected decoded XScale/YScale 0.35/0.35, got %v/%v", doc.Stage.BGdef.XScale, doc.Stage.BGdef.YScale)
+	}
+
+	var buf bytes.Buffer
+	if err := doc.Serialize(&buf); err != nil {
+		t.Fatalf("unexpected error serializing: %v", err)
+	}
+	if buf.String() != src {
+		t.Errorf("expected byte-for-byte reproduction of source.\n--- want ---\n%s\n--- got ---\n%s", src, buf.String())
+	}
+}
+
+// TestParseDocument_MusicSection_DecodesMusicFileAndSerializeReproducesByteForByte
+// covers backlog item 013's round-trip acceptance criterion: a file that
+// has a "[Music]" section must both decode it into Stage.MusicFile and
+// still round-trip byte-exact through Document when left unmodified.
+func TestParseDocument_MusicSection_DecodesMusicFileAndSerializeReproducesByteForByte(t *testing.T) {
+	src := `[Music]
+bgmusic = training.mp3
+`
+
+	doc, err := ParseDocument(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if doc.Stage.MusicFile != "training.mp3" {
+		t.Errorf("expected decoded MusicFile %q, got %q", "training.mp3", doc.Stage.MusicFile)
 	}
 
 	var buf bytes.Buffer

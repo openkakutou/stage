@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stages can now expose their background music file path, so consuming apps (starting with `mode-quick-versus`) can actually play a stage's music instead of it being silently dropped.
+
 ## [0.12.0] - 2026-09-04
 
 ### Added

@@ -8,8 +8,9 @@ import (
 
 func TestSerialize_FullStage_RoundTripsThroughParseWithEquivalentStructure(t *testing.T) {
 	s := Stage{
-		Name:   "Training Room",
-		Author: "Elecbyte",
+		Name:      "Training Room",
+		Author:    "Elecbyte",
+		MusicFile: "training.mp3",
 		BGdef: BGdef{
 			SpriteFile:       "stage0.sff",
 			LocalCoordWidth:  320,
@@ -59,6 +60,9 @@ func TestSerialize_FullStage_RoundTripsThroughParseWithEquivalentStructure(t *te
 
 	if got.Name != s.Name || got.Author != s.Author {
 		t.Errorf("Name/Author: expected %q/%q, got %q/%q", s.Name, s.Author, got.Name, got.Author)
+	}
+	if got.MusicFile != s.MusicFile {
+		t.Errorf("MusicFile: expected %q, got %q", s.MusicFile, got.MusicFile)
 	}
 	if got.BGdef != s.BGdef {
 		t.Errorf("BGdef: expected %+v, got %+v", s.BGdef, got.BGdef)
@@ -303,6 +307,57 @@ func TestSerialize_NonModelStage_OmitsAllThreeDOutput(t *testing.T) {
 		if strings.Contains(strings.ToLower(output), strings.ToLower(unwanted)) {
 			t.Errorf("expected a non-model stage to omit %q from output, got:\n%s", unwanted, output)
 		}
+	}
+}
+
+// TestSerialize_MusicFile_WritesMusicSection covers backlog item 013's
+// fresh-write path: a non-empty MusicFile must reach a "[Music]" section
+// and survive a re-parse.
+func TestSerialize_MusicFile_WritesMusicSection(t *testing.T) {
+	s := Stage{MusicFile: "stage.ogg", BGdef: BGdef{LocalCoordWidth: 320, LocalCoordHeight: 240}}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+
+	if !strings.Contains(output, "[Music]") || !strings.Contains(output, "bgmusic = stage.ogg") {
+		t.Errorf("expected a [Music] section with bgmusic = stage.ogg in output, got:\n%s", output)
+	}
+
+	got, err := Parse(strings.NewReader(output))
+	if err != nil {
+		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, output)
+	}
+	if got.MusicFile != "stage.ogg" {
+		t.Errorf("expected MusicFile %q after round trip, got %q", "stage.ogg", got.MusicFile)
+	}
+}
+
+// TestSerialize_EmptyMusicFile_OmitsMusicSection covers this item's own
+// acceptance criterion: an empty MusicFile must not fabricate a "[Music]"
+// section that was never authored, unlike "[Info]" (always emitted) --
+// "[Music]" is a genuinely optional real-world section.
+func TestSerialize_EmptyMusicFile_OmitsMusicSection(t *testing.T) {
+	s := Stage{BGdef: BGdef{LocalCoordWidth: 320, LocalCoordHeight: 240}}
+
+	var buf strings.Builder
+	if err := Serialize(&buf, s); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	output := buf.String()
+
+	if strings.Contains(output, "[Music]") {
+		t.Errorf("expected no [Music] section for an empty MusicFile, got:\n%s", output)
+	}
+
+	got, err := Parse(strings.NewReader(output))
+	if err != nil {
+		t.Fatalf("re-parsing serialized output failed: %v\noutput:\n%s", err, output)
+	}
+	if got.MusicFile != "" {
+		t.Errorf("expected empty MusicFile, got %q", got.MusicFile)
 	}
 }
 

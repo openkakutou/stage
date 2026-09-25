@@ -26,12 +26,12 @@ var actionHeaderAttemptPattern = regexp.MustCompile(`(?i)^\[\s*begin(\s|\]|$)`)
 // it describes.
 //
 // Only sections this data model has a place for are recognized:
-// "[Info]" (Stage.Name/Author), "[BGDef]" (BGdef.SpriteFile plus, for a
-// model-based stage, its ModelFile), "[StageInfo]" (BGdef's local
-// coordinate space, ground level, and 2D BG element draw-time scale factor
-// — xscale/yscale default to 1 when the section is present but omits
-// them), "[Camera]" (CameraBounds plus
-// BGdef's zoom range and, for a model-based stage, its Near/Far/FOV/
+// "[Info]" (Stage.Name/Author), "[Music]" (Stage.MusicFile, backlog item
+// 013), "[BGDef]" (BGdef.SpriteFile plus, for a model-based stage, its
+// ModelFile), "[StageInfo]" (BGdef's local coordinate space, ground level,
+// and 2D BG element draw-time scale factor — xscale/yscale default to 1
+// when the section is present but omits them), "[Camera]" (CameraBounds
+// plus BGdef's zoom range and, for a model-based stage, its Near/Far/FOV/
 // YShift), "[PlayerInfo]" (StageBoundaries, plus its z-axis extension and
 // PlayerStartZ for a model-based stage), "[Model]" and "[Scaling]"
 // (Ikemen GO's 3D stage extension, see the roadmap's .vibe/decisions/014),
@@ -40,15 +40,16 @@ var actionHeaderAttemptPattern = regexp.MustCompile(`(?i)^\[\s*begin(\s|\]|$)`)
 // element's frame sequence (Stage.Animations, keyed by action number,
 // resolved independently of element order -- see .vibe/decisions/006 and
 // item 009). Any other section — including "[Bound]",
-// "[Shadow]", "[Reflection]", "[Music]" — carries nothing this model
-// represents, so its lines are skipped without validation, the same way
-// def.Parse/cns.Parse in the character repo skip unrecognized sections
-// rather than aborting the read. Within a recognized section, an
-// unrecognized key is likewise ignored, and a content line that isn't a
-// valid "key = value" pair is ignored rather than erroring — real
-// MUGEN/Ikemen engines tolerate both. Comment lines (';', whole-line or
-// trailing) are stripped before parsing, and values may optionally be
-// wrapped in double quotes, which are removed.
+// "[Shadow]", "[Reflection]" — carries nothing this model represents, so
+// its lines are skipped without validation, the same way def.Parse/
+// cns.Parse in the character repo skip unrecognized sections rather than
+// aborting the read. Within a recognized section, an unrecognized key is
+// likewise ignored (e.g. "[Music]"'s own "bgvolume" key, which this model
+// has no field for), and a content line that isn't a valid "key = value"
+// pair is ignored rather than erroring — real MUGEN/Ikemen engines
+// tolerate both. Comment lines (';', whole-line or trailing) are stripped
+// before parsing, and values may optionally be wrapped in double quotes,
+// which are removed.
 //
 // A "[BG <name>]" section missing its "type" key defaults that element to
 // BGElementNormal, matching MUGEN's own behavior for a missing type.
@@ -163,6 +164,10 @@ func Parse(r io.Reader) (Stage, error) {
 				stage.Name = value
 			case "author":
 				stage.Author = value
+			}
+		case "music":
+			if strings.EqualFold(key, "bgmusic") {
+				stage.MusicFile = value
 			}
 		case "bgdef":
 			switch {

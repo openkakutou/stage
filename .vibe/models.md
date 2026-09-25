@@ -7,6 +7,7 @@ Root aggregate for a MUGEN/Ikemen GO stage. Zero-value valid (nil `Elements` ran
 |---|---|---|
 | Name | string | Display name, from `.def` `[Info]` "name" — empty if absent |
 | Author | string | Author/creator, from `.def` `[Info]` "author" — empty if absent |
+| MusicFile | string | Background music file path, from `.def` `[Music]` "bgmusic" — empty if the section is absent, omits the key, or leaves it blank |
 | BGdef | BGdef | Stage-level settings |
 | Elements | []BGElement | BG elements/layers, in `.def` file order |
 | Animations | map[int]BGAnimation | Every `[Begin Action N]` block, keyed by action number — nil when the stage declares none |

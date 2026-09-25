@@ -310,9 +310,6 @@ func TestParse_UnrecognizedSectionsAndKeys_AreSkipped(t *testing.T) {
 name = "Some Stage"
 does-not-exist = 1
 
-[Music]
-bgmusic = stage.ogg
-
 [Shadow]
 intensity = 128
 
@@ -328,6 +325,96 @@ boundright = 50
 	}
 	if s.CameraBounds.Left != -50 || s.CameraBounds.Right != 50 {
 		t.Errorf("expected CameraBounds.Left/Right -50/50 despite surrounding unknown sections/keys, got %d/%d", s.CameraBounds.Left, s.CameraBounds.Right)
+	}
+}
+
+// TestParse_MusicSection_DecodesBgmusicIntoMusicFile covers backlog item
+// 013's nominal path: a "[Music]" section's "bgmusic" key becomes
+// Stage.MusicFile.
+func TestParse_MusicSection_DecodesBgmusicIntoMusicFile(t *testing.T) {
+	src := `[Music]
+bgmusic = stage.ogg
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.MusicFile != "stage.ogg" {
+		t.Errorf("expected MusicFile %q, got %q", "stage.ogg", s.MusicFile)
+	}
+}
+
+// TestParse_NoMusicSection_LeavesMusicFileEmpty covers this item's own
+// acceptance criterion: a stage .def with no "[Music]" section at all still
+// parses successfully, with MusicFile left at its zero value.
+func TestParse_NoMusicSection_LeavesMusicFileEmpty(t *testing.T) {
+	src := `[Info]
+name = "Some Stage"
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.MusicFile != "" {
+		t.Errorf("expected empty MusicFile when no [Music] section is present, got %q", s.MusicFile)
+	}
+}
+
+// TestParse_MusicSectionWithoutBgmusicKey_LeavesMusicFileEmpty covers this
+// item's own acceptance criterion for an empty path: a "[Music]" section
+// present but with no usable "bgmusic" value (blank value, or only the
+// unrelated "bgvolume" key real fixtures also carry) still parses
+// successfully, with MusicFile left empty rather than erroring.
+func TestParse_MusicSectionWithoutBgmusicKey_LeavesMusicFileEmpty(t *testing.T) {
+	src := `[Music]
+bgmusic =
+bgvolume = 255
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.MusicFile != "" {
+		t.Errorf("expected empty MusicFile for a blank bgmusic value, got %q", s.MusicFile)
+	}
+}
+
+// TestParse_MusicSectionKeyIsCaseInsensitive_DecodesBgmusic mirrors this
+// parser's existing case-insensitive key matching convention (every other
+// recognized key is matched via strings.EqualFold).
+func TestParse_MusicSectionKeyIsCaseInsensitive_DecodesBgmusic(t *testing.T) {
+	src := `[Music]
+BGMUSIC = stage.ogg
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if s.MusicFile != "stage.ogg" {
+		t.Errorf("expected MusicFile %q from an uppercase key, got %q", "stage.ogg", s.MusicFile)
+	}
+}
+
+// TestParse_MusicPathWithSpacesUnquoted_DecodesVerbatim covers a real-world
+// authoring habit found in testdata/ikemen-go-3d-model-stage.def: an
+// unquoted bgmusic path containing spaces, relying on the parser taking the
+// rest of the line as the value rather than splitting on whitespace.
+func TestParse_MusicPathWithSpacesUnquoted_DecodesVerbatim(t *testing.T) {
+	src := `[Music]
+bgmusic = ../../stages/Guilty Gear Xrd - Neo New York/theme.ogg
+`
+
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := "../../stages/Guilty Gear Xrd - Neo New York/theme.ogg"
+	if s.MusicFile != want {
+		t.Errorf("expected MusicFile %q, got %q", want, s.MusicFile)
 	}
 }
 
