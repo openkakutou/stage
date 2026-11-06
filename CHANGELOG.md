@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-06
+
 ### Added
 
 - Stages now keep their animated-background controllers (the groups and timed effects such as showing or hiding a layer) instead of silently dropping them when a stage is read. Unknown controller types are kept as written, and saving an unmodified stage still reproduces the original file exactly.
@@ -99,7 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/openkakutou/stage/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/openkakutou/stage/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/openkakutou/stage/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/openkakutou/stage/compare/v0.11.0...v0.11.1

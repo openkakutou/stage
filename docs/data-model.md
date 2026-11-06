@@ -99,6 +99,10 @@ here (see `.vibe/decisions/006`). See [docs/api.md](api.md#resolveanimationframe
 (see [docs/api.md](api.md#resolveanimationframe)) resolves which frame is
 current at a given elapsed tick count, honoring `LoopStart`.
 
+## `BGCtrlDef` / `BGCtrl`
+
+`Stage.BGCtrlDefs` holds each `[BGCtrlDef <name>]` group (`Name`, `CtrlID`, `LoopTime`) with its `Controllers`, the `[BGCtrl <n>]` blocks that follow it by position (names repeat in real files). A `BGCtrl` has a lowercased `Type`, `CtrlID`, `Time` and ordered raw `Params` (`Key`, `Value`). Unknown types and parameters are kept as written; a multi-value `time` (`a,b,c`) leaves `Time` at 0 and stays raw in `Params`. Read-only for now: `Serialize` does not write them, but an unmodified save through `Document` stays byte-exact.
+
 ## `CameraBounds` vs `StageBoundaries`
 
 These are kept as two distinct Go types on purpose — they clamp two
