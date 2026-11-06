@@ -39,6 +39,10 @@ type Stage struct {
 	// "[Begin Action N]" block can appear anywhere in the file, not
 	// necessarily next to the element(s) that reference it.
 	Animations map[int]BGAnimation `json:"animations"`
+	// BGCtrlDefs holds every "[BGCtrlDef <name>]" group of the .def, each with
+	// the "[BGCtrl <n>]" blocks following it, in file order. Nil when the
+	// stage declares none. Read-only: Serialize does not write it back.
+	BGCtrlDefs []BGCtrlDef `json:"bgCtrlDefs"`
 	// CameraBounds is the box the camera's own position is clamped to.
 	CameraBounds CameraBounds `json:"cameraBounds"`
 	// StageBoundaries is the x-range (and, for a model-based stage,

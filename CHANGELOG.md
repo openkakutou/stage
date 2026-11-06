@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stages now keep their animated-background controllers (the groups and timed effects such as showing or hiding a layer) instead of silently dropping them when a stage is read. Unknown controller types are kept as written, and saving an unmodified stage still reproduces the original file exactly.
+
 ## [0.13.0] - 2026-09-26
 
 ### Added

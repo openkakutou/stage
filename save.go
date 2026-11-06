@@ -55,13 +55,52 @@ func SerializeDef(original []byte, s Stage) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// normalizeStageForJSON replaces s.Elements' nil value with its non-nil
-// empty equivalent, in place — needed so a caller round-tripping an
-// unmodified Stage through JSON (where an absent/empty list becomes "[]",
-// not "null") is never spuriously treated as an edit by SerializeDef,
-// mirroring character's own normalizeCharacterInfoForJSON.
+// normalizeStageForJSON returns a deep copy of s in which every nil slice
+// or map reachable from it is replaced by an empty non-nil one. The rule is
+// generic (reflect-based), so no field list is kept here: a new collection
+// field is covered automatically. It is needed so a caller round-tripping
+// an unmodified Stage through JSON (where an absent/empty list becomes
+// "[]", not "null") is never spuriously treated as an edit by SerializeDef,
+// mirroring character's own normalizeCharacterInfoForJSON. s itself, and
+// the arrays it shares, are never written to.
 func normalizeStageForJSON(s *Stage) {
-	if s.Elements == nil {
-		s.Elements = []BGElement{}
+	out := reflect.New(reflect.TypeOf(*s)).Elem()
+	normalizeValue(out, reflect.ValueOf(*s))
+	*s = out.Interface().(Stage)
+}
+
+func normalizeValue(dst, src reflect.Value) {
+	switch src.Kind() {
+	case reflect.Slice:
+		n := reflect.MakeSlice(src.Type(), src.Len(), src.Len())
+		for i := 0; i < src.Len(); i++ {
+			normalizeValue(n.Index(i), src.Index(i))
+		}
+		dst.Set(n)
+	case reflect.Map:
+		n := reflect.MakeMapWithSize(src.Type(), src.Len())
+		iter := src.MapRange()
+		for iter.Next() {
+			v := reflect.New(src.Type().Elem()).Elem()
+			normalizeValue(v, iter.Value())
+			n.SetMapIndex(iter.Key(), v)
+		}
+		dst.Set(n)
+	case reflect.Struct:
+		for i := 0; i < src.NumField(); i++ {
+			if !dst.Field(i).CanSet() {
+				continue
+			}
+			normalizeValue(dst.Field(i), src.Field(i))
+		}
+	case reflect.Ptr:
+		if src.IsNil() {
+			return
+		}
+		n := reflect.New(src.Type().Elem())
+		normalizeValue(n.Elem(), src.Elem())
+		dst.Set(n)
+	default:
+		dst.Set(src)
 	}
 }

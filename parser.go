@@ -39,7 +39,10 @@ var actionHeaderAttemptPattern = regexp.MustCompile(`(?i)^\[\s*begin(\s|\]|$)`)
 // case-insensitively), and one "[Begin Action N]" section per animated BG
 // element's frame sequence (Stage.Animations, keyed by action number,
 // resolved independently of element order -- see .vibe/decisions/006 and
-// item 009). Any other section — including "[Bound]",
+// item 009), one "[BGCtrlDef <name>]" section per background controller
+// group plus the "[BGCtrl <n>]" blocks following it (Stage.BGCtrlDefs,
+// matched case-insensitively, read-only; a "[BGCtrl]" before any
+// "[BGCtrlDef]" is ignored). Any other section — including "[Bound]",
 // "[Shadow]", "[Reflection]" — carries nothing this model represents, so
 // its lines are skipped without validation, the same way def.Parse/
 // cns.Parse in the character repo skip unrecognized sections rather than
@@ -68,6 +71,8 @@ func Parse(r io.Reader) (Stage, error) {
 	var currentSection string
 	var currentAnimation *BGAnimation
 	var currentActionNumber int
+	var currentCtrlDef *BGCtrlDef
+	var currentCtrl *BGCtrl
 
 	flushCurrent := func() {
 		if current != nil {
@@ -85,6 +90,20 @@ func Parse(r io.Reader) (Stage, error) {
 		}
 	}
 
+	flushCurrentCtrl := func() {
+		if currentCtrl != nil && currentCtrlDef != nil {
+			currentCtrlDef.Controllers = append(currentCtrlDef.Controllers, *currentCtrl)
+		}
+		currentCtrl = nil
+	}
+	flushCurrentCtrlDef := func() {
+		flushCurrentCtrl()
+		if currentCtrlDef != nil {
+			stage.BGCtrlDefs = append(stage.BGCtrlDefs, *currentCtrlDef)
+			currentCtrlDef = nil
+		}
+	}
+
 	lineNumber := 0
 	for scanner.Scan() {
 		lineNumber++
@@ -99,11 +118,22 @@ func Parse(r io.Reader) (Stage, error) {
 			}
 			flushCurrent()
 			flushCurrentAnimation()
+			flushCurrentCtrl()
 
 			raw := strings.TrimSpace(line[1 : len(line)-1])
 			if name, ok := bgElementName(raw); ok {
 				current = &BGElement{Name: name}
 				currentSection = "bg"
+				continue
+			}
+			if kind, name, ok := bgCtrlHeader(raw); ok {
+				currentSection = kind
+				if kind == sectionBGCtrlDef {
+					flushCurrentCtrlDef()
+					currentCtrlDef = &BGCtrlDef{Name: name}
+				} else if currentCtrlDef != nil {
+					currentCtrl = &BGCtrl{}
+				}
 				continue
 			}
 			if m := actionHeaderPattern.FindStringSubmatch(line); m != nil {
@@ -218,6 +248,20 @@ func Parse(r io.Reader) (Stage, error) {
 			if err := parseBGElementKey(current, key, value, lineNumber); err != nil {
 				return Stage{}, err
 			}
+		case sectionBGCtrlDef:
+			if currentCtrlDef == nil {
+				continue
+			}
+			if err := parseBGCtrlDefKey(currentCtrlDef, key, value, lineNumber); err != nil {
+				return Stage{}, err
+			}
+		case sectionBGCtrl:
+			if currentCtrl == nil {
+				continue
+			}
+			if err := parseBGCtrlKey(currentCtrl, key, value, lineNumber); err != nil {
+				return Stage{}, err
+			}
 		case "model":
 			if err := parseModelKey(&stage.Model, key, value, lineNumber); err != nil {
 				return Stage{}, err
@@ -233,6 +277,7 @@ func Parse(r io.Reader) (Stage, error) {
 
 	flushCurrent()
 	flushCurrentAnimation()
+	flushCurrentCtrlDef()
 
 	if err := scanner.Err(); err != nil {
 		return Stage{}, fmt.Errorf("stage: reading stage definition source: %w", err)

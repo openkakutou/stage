@@ -35,6 +35,7 @@ tolerated and ignored rather than rejected:
 | `[Model]` | `Model` — Ikemen GO's 3D model placement/lighting settings |
 | `[Scaling]` | `Scaling` — Ikemen GO's 3D perspective-scaling settings |
 | `[BG <name>]` (one per layer) | An entry in `Elements`, matched case-insensitively |
+| `[BGCtrlDef <name>]` + following `[BGCtrl <n>]` blocks | An entry in `BGCtrlDefs` (typed `type`/`ctrlID`/`time`/`looptime`, other keys raw in `Params`; read-only, not serialized) |
 | `[Begin Action N]` (one per animated layer's frame sequence) | An entry in `Animations`, keyed by action number — can appear anywhere in the file, not necessarily next to the element(s) referencing it |
 
 `BGdef.ModelFile`, `[Model]`, `[Scaling]`, and the 3D-only `[Camera]`/
@@ -160,8 +161,8 @@ original file's bytes — never a `Document`. `original` is the `.def`
 file's own previously loaded bytes, empty when `s` describes a brand new
 stage with no original file yet.
 
-- When `original` is non-empty and `s` (after normalizing a nil `Elements`
-  to an empty slice, so a JSON round trip through a JS caller is never
+- When `original` is non-empty and `s` (after normalizing every nil slice or map
+  reachable from it to an empty one, on a deep copy — `s` is never mutated — so a JSON round trip through a JS caller is never
   spuriously treated as an edit) is unchanged from what parsing `original`
   itself produces, the original bytes are written back out verbatim —
   byte-exact, matching `Document`'s guarantee.

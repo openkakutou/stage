@@ -11,6 +11,7 @@ Root aggregate for a MUGEN/Ikemen GO stage. Zero-value valid (nil `Elements` ran
 | BGdef | BGdef | Stage-level settings |
 | Elements | []BGElement | BG elements/layers, in `.def` file order |
 | Animations | map[int]BGAnimation | Every `[Begin Action N]` block, keyed by action number — nil when the stage declares none |
+| BGCtrlDefs | []BGCtrlDef | Every `[BGCtrlDef]` group with its `[BGCtrl]` controllers, in file order — nil when the stage declares none (item 014, read-only: not serialized) |
 | CameraBounds | CameraBounds | Camera's own scroll clamp |
 | StageBoundaries | StageBoundaries | Character x-movement clamp (and z-movement clamp, 3D-only) |
 | Model | Model | 3D model placement/lighting (Ikemen GO extension, zero-valued for a 2D stage) |
@@ -118,6 +119,12 @@ An animated element's (`BGElementAnim`) frame sequence — the `[Begin Action N]
 | Frames | []BGAnimFrame | Ordered frame sequence |
 | LoopStart | int | Index playback loops back to after the full sequence plays once (0 = loop the whole sequence) |
 Defined in: `animation.go`
+
+## BGCtrlDef
+A `[BGCtrlDef <name>]` group (`Name`, `CtrlID`, `LoopTime`) and the `Controllers []BGCtrl` that follow it by position. Defined in: `bgctrl.go`.
+
+## BGCtrl
+One `[BGCtrl <n>]` controller: lowercased `Type` (unknown types kept as-is), `CtrlID`, `Time` and ordered raw `Params []BGCtrlParam{Key, Value}`. A multi-value `time` (`a,b,c`) leaves `Time` 0 and is kept raw in `Params`. Defined in: `bgctrl.go`.
 
 ## BGAnimFrame
 One displayed frame within a `BGAnimation`.

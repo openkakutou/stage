@@ -56,6 +56,8 @@ func TestCorpusCompat_RealDefFiles_ParseSuccessRate(t *testing.T) {
 
 	var parseFailures, docFailures, serializeFailures []string
 	parsed := 0
+	ctrlTypeCounts := map[string]int{}
+	ctrlDefCount, ctrlCount := 0, 0
 
 	for _, path := range files {
 		data, err := os.ReadFile(path)
@@ -70,6 +72,13 @@ func TestCorpusCompat_RealDefFiles_ParseSuccessRate(t *testing.T) {
 			continue
 		}
 		parsed++
+		for _, def := range s.BGCtrlDefs {
+			ctrlDefCount++
+			for _, c := range def.Controllers {
+				ctrlCount++
+				ctrlTypeCounts[c.Type]++
+			}
+		}
 
 		doc, err := ParseDocument(bytes.NewReader(data))
 		if err != nil {
@@ -97,6 +106,8 @@ func TestCorpusCompat_RealDefFiles_ParseSuccessRate(t *testing.T) {
 	}
 	t.Logf("corpus scan: %d files under %s — %d parsed (%.1f%%), %d parse failures, %d Document round-trip failures, %d SerializeDef round-trip failures",
 		len(files), corpusDir, parsed, successRate, len(parseFailures), len(docFailures), len(serializeFailures))
+
+	t.Logf("corpus BGCtrl: %d BGCtrlDef groups, %d BGCtrl blocks, per type: %v", ctrlDefCount, ctrlCount, ctrlTypeCounts)
 
 	report := func(label string, failures []string) {
 		if len(failures) == 0 {

@@ -69,6 +69,7 @@ Planned, mirroring `character`'s layout:
 - `.def` format-preserving serializer (`Document`/`ParseDocument`, same pattern as `character`'s `.air`/`.cns`) — backlog item 003
 - `sff` integration for stage sprite sheets — backlog item 004
 - BG element frame/animation resolution (parallax, animated playback) — backlog item 005
+- `bgctrl.go` — `[BGCtrlDef]`/`[BGCtrl]` controller model and key parsing (item 014)
 - `cmd/wasm/` — build-tag-gated WebAssembly entrypoint plus its release pipeline, mirroring `character`'s pattern — backlog item 006
 
 <!-- The import below loads the compact codebase map into every session. It is maintained by /vibe:sync; details (modules/, models.md, glossary.md) stay on-demand. -->
@@ -146,6 +147,12 @@ Agents active for `/vibe:review` on this project:
 | `vibe:review-tests` | ✅ | always active |
 | `vibe:review-naming` | ✅ | always active |
 | `vibe:review-complexity` | ✅ | always active |
+| `vibe:review-correctness` | ✅ | always active |
+| `vibe:review-comments` | ✅ | always active |
+| `vibe:review-signatures` | ✅ | always active |
+| `vibe:review-coordination` | ✅ | always active |
+| `vibe:review-docs` | ✅ | active: Markdown documentation beyond the README exists (`docs/`, `.vibe/`) |
+| `vibe:review-alternative-design` | ❌ | inactive: explicit opt-in only |
 | `vibe:review-security` | ✅ | always active |
 | `vibe:review-dependencies` | ✅ | always active |
 | `vibe:review-robustness` | ✅ | always active |

@@ -37,3 +37,8 @@ _Sources: `bgdef.go`, `model.go`_
 How a character's on-screen size and vertical screen offset change with their depth (Z) position on a model-based stage — the illusion that a character farther from the camera appears smaller and higher on screen.
 **Do not confuse with:** Stage boundaries, which clamp where a character may move, not how it is drawn once there.
 _Sources: `scaling.go`_
+
+## BG controller
+A timed instruction a stage attaches to its backgrounds — for example showing or hiding a layer or changing a palette effect — grouped under a named `[BGCtrlDef]` group that carries a loop time and is followed by its `[BGCtrl]` blocks. Modeled by `BGCtrlDef` and `BGCtrl`; `Parse` reads them into `Stage.BGCtrlDefs`, keeping unknown types and their parameters as written.
+**Do not confuse with:** BG element, the layer a controller acts on, not the instruction itself.
+_Sources: `bgctrl.go`, `parser.go`_
