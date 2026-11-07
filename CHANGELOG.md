@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-07
+
 ### Added
 
 - Animated-background controllers are now written back out when a stage is saved, so a newly created stage keeps them, and editing a controller in an existing stage changes only that controller's own lines while comments and the rest of the file stay as they were.
@@ -105,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/openkakutou/stage/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/openkakutou/stage/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/openkakutou/stage/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/openkakutou/stage/compare/v0.11.1...v0.12.0

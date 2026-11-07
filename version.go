@@ -4,4 +4,4 @@
 package stage
 
 // Version is the library version.
-const Version = "0.14.0"
+const Version = "0.15.0"
