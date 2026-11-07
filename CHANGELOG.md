@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-07
+
 ### Added
 
 - A stage's animated-background controllers can now be played at any moment: for each background layer, the library tells whether it is shown or hidden, where it is offset and which animation it plays, following the loop and timing of both MUGEN and Ikemen GO stages, and the web build returns this for many moments and all layers in a single call. Background layers now keep the identifier written in the stage file, which is how controllers find their layers.
@@ -111,7 +113,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/openkakutou/stage/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/openkakutou/stage/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/openkakutou/stage/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/openkakutou/stage/compare/v0.12.0...v0.13.0
