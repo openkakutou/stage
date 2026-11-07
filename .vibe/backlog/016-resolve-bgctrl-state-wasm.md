@@ -1,5 +1,5 @@
 ---
-status: todo
+status: in_progress
 depends_on: [014]
 ---
 # Resolve controller-driven layer state at a tick (Go + WASM)

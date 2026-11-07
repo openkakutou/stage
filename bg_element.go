@@ -37,6 +37,9 @@ type BGElement struct {
 	// Name is this element's section name, e.g. the "floor" in a
 	// "[BG floor]" header (.def "[BG <name>]" section header).
 	Name string `json:"name"`
+	// ID is this element's "id" key, the number BGCtrl controllers target
+	// through their ctrlID; 0 when absent.
+	ID int `json:"id"`
 	// Type selects how this element is drawn and animated (.def BG
 	// element "type").
 	Type BGElementType `json:"type"`

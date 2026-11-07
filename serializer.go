@@ -354,6 +354,11 @@ func writeBGElementSection(w io.Writer, el BGElement) error {
 	if _, err := fmt.Fprintf(w, "type = %s\n", el.Type); err != nil {
 		return fmt.Errorf("stage: writing type: %w", err)
 	}
+	if el.ID != 0 {
+		if _, err := fmt.Fprintf(w, "id = %d\n", el.ID); err != nil {
+			return fmt.Errorf("stage: writing id: %w", err)
+		}
+	}
 	if el.Type == BGElementAnim {
 		if _, err := fmt.Fprintf(w, "actionno = %d\n", el.ActionNumber); err != nil {
 			return fmt.Errorf("stage: writing actionno: %w", err)

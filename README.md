@@ -20,6 +20,7 @@ Available now:
 - Reading a stage's horizontal/vertical scale-down factor for background art authored at a different resolution than the stage's own coordinate space, instead of silently dropping it — real stages that rely on this factor now read and write correctly instead of rendering hugely oversized (or undersized) backgrounds
 - Reading a stage's background music file path, so a consuming app can actually play a stage's music
 - Reading a stage's animated-background controllers (timed effects such as showing or hiding a layer), keeping types this library does not know as written instead of dropping them — saving an unmodified stage still reproduces the original file exactly
+- Playing a stage's animated-background controllers: for any moment, which layers are shown or hidden, where they sit and which animation they play, following the loop and timing of MUGEN and Ikemen GO stages — resolved for many moments and all layers in one call from a web browser. Background layers now keep the `id` written in the stage file, which is how controllers find them
 <!-- vibe:end:features -->
 
 <!-- vibe:begin:install -->

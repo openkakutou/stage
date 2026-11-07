@@ -506,6 +506,12 @@ func parseBGElementKey(el *BGElement, key, value string, lineNumber int) error {
 			// the normal default rather than rejecting the file.
 			el.Type = BGElementNormal
 		}
+	case strings.EqualFold(key, "id"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid id %q: %w", lineNumber, value, err)
+		}
+		el.ID = n
 	case strings.EqualFold(key, "spriteno"):
 		g, i, err := parseIntPair(value)
 		if err != nil {

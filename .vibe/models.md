@@ -44,12 +44,24 @@ One `[BG element_name]` section. `Type` selects which subset of fields is meanin
 | Type | BGElementType | `type` |
 | Sprite | SpriteRef | `spriteno` |
 | ActionNumber | int | `actionno` |
+| ID | int | `id` (0 when absent; the target of `ctrlID`) |
 | LayerNo | int | `layerno` |
 | StartX, StartY | int | `start` |
 | DeltaX, DeltaY | float64 | `delta` |
 | TileX, TileY | int | `tile` |
 | TileSpacingX, TileSpacingY | int | `tilespacing` |
 Defined in: `bg_element.go`
+
+## BGLayerState
+A BG element's controller-driven state at one tick, returned by `ResolveBGCtrlState` (one per element, in element order; see `.vibe/decisions/012-resolve-bgctrl-state-timing-and-targeting.md`).
+
+| Field | Type | Notes |
+|---|---|---|
+| Name | string | the element's section name |
+| Visible, Enabled | bool | true by default; set by `visible` / `enabled` controllers |
+| OffsetX, OffsetY | float64 | added to the element's start position; 0 by default |
+| AnimAction | int | action set by an `anim` controller, -1 when none |
+Defined in: `bgctrl_resolve.go`
 
 ## BGElementType
 String enum matching literal `.def` "type" tokens: `BGElementNormal` ("normal"), `BGElementParallax` ("parallax"), `BGElementAnim` ("anim"). Zero value ("") is not a valid token — defaulting a missing key to "normal" is a parser concern, not encoded here.

@@ -195,6 +195,30 @@ assert(typeof argCountAnimResult.error === "string" && argCountAnimResult.error.
 const afterAnimResult = globalThis.OpenKakutouStage.load(defBytes);
 assert(afterAnimResult.error === null, "module still works after the resolveAnimationFrames calls");
 
+// --- resolveBGCtrlState: controller-driven layer state over several ticks ---
+const ctrlStage = {
+	elements: [{ name: "a", id: 1 }, { name: "b", id: 2 }],
+	bgCtrlDefs: [{ name: "g", ctrlId: 1, loopTime: 100, controllers: [
+		{ type: "visible", ctrlId: 0, time: 30, params: [{ key: "value", value: "0" }] },
+	] }],
+};
+const ctrlResult = globalThis.OpenKakutouStage.resolveBGCtrlState(
+	JSON.stringify({ stage: ctrlStage, ticks: [29, 30, 129] }),
+);
+assert(ctrlResult.error === null, `resolveBGCtrlState reports no error (got: ${ctrlResult.error})`);
+assert(ctrlResult.states.length === 3 && ctrlResult.states[0].length === 2, "resolveBGCtrlState returns one row of 2 layers per tick");
+assert(ctrlResult.states[0][0].visible === true, "resolveBGCtrlState tick 29: layer a visible");
+assert(ctrlResult.states[1][0].visible === false, "resolveBGCtrlState tick 30: layer a hidden");
+assert(ctrlResult.states[1][1].visible === true, "resolveBGCtrlState tick 30: layer b (other id) untouched");
+assert(ctrlResult.states[1][0].offsetX === 0 && ctrlResult.states[1][0].offsetY === 0, "resolveBGCtrlState rows carry offsetX/offsetY (0 here)");
+const ctrlEmpty = globalThis.OpenKakutouStage.resolveBGCtrlState(JSON.stringify({ stage: ctrlStage, ticks: [] }));
+assert(ctrlEmpty.error === null && Array.isArray(ctrlEmpty.states) && ctrlEmpty.states.length === 0, "resolveBGCtrlState with ticks [] returns an empty states array");
+assert(ctrlResult.states[2][0].visible === true && ctrlResult.states[2][0].animAction === -1, "resolveBGCtrlState tick 129 wraps (loop 100, t=29): visible again");
+const ctrlBad = globalThis.OpenKakutouStage.resolveBGCtrlState("not json");
+assert(ctrlBad.states === null && typeof ctrlBad.error === "string", "resolveBGCtrlState malformed JSON reports error");
+const ctrlArgs = globalThis.OpenKakutouStage.resolveBGCtrlState();
+assert(ctrlArgs.states === null && typeof ctrlArgs.error === "string", "resolveBGCtrlState missing argument reports error");
+
 // --- resolveSprites: batched sprite pixel resolution (item 010) ---
 // v1-basic.sff carries exactly one real sprite, at (group 0, image 0) —
 // copied from character's own cmd/wasm/testdata, the same tiny real-file

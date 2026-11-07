@@ -20,7 +20,7 @@ never touch it.
 
 ## JS API
 
-The module registers a single global on `js.Global()` with four functions.
+The module registers a single global on `js.Global()` with five functions.
 
 ### Loading a stage
 
@@ -94,6 +94,19 @@ if (saveResult.error) {
 }
 // saveResult.bytes is ready to offer as a browser download
 ```
+
+### Resolving controller-driven layer state
+
+```js
+globalThis.OpenKakutouStage.resolveBGCtrlState(requestJSON)
+```
+
+`requestJSON` is `{ "stage": <load's stage>, "ticks": [int, ...] }`. Returns
+`{ states, error }`: `states` is one array per tick (same order as `ticks`),
+each holding one `{ name, visible, enabled, offsetX, offsetY, animAction }`
+per BG element (`animAction` is `-1` when not overridden); `error` is set
+(and `states` null) only for unparsable JSON or a wrong argument count.
+Never throws. Rules: [decision 012](../.vibe/decisions/012-resolve-bgctrl-state-timing-and-targeting.md).
 
 ### Resolving animation frames
 
@@ -228,7 +241,7 @@ for (const result of results) {
 `cmd/wasm/smoke.mjs` is a Node.js harness that loads a built module the
 same way a browser would (via `wasm_exec.js`) and exercises both the
 nominal path and error paths for `load`, `save`, `resolveAnimationFrames`,
-and `resolveSprites` — the closest thing to `go test` this file has, since
+`resolveSprites` and `resolveBGCtrlState` — the closest thing to `go test` this file has, since
 `syscall/js` code cannot run under the plain Go toolchain:
 
 ```sh

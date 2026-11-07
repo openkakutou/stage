@@ -1,10 +1,10 @@
 # testdata
 
-Real test fixtures for this repo's `.def` stage parser (backlog item 007).
+Test fixtures for this repo's `.def` stage parser (backlog item 007): real vendored files plus a few hand-written synthetic ones.
 
 ## Source
 
-Both files are vendored, unmodified real-world stage `.def` files from a
+The real files below are vendored, unmodified real-world stage `.def` files from a
 local Ikemen GO frontend install's `stages/` directory (see
 `.vibe/fixture-sources.md`'s "Local real-stage corpus" section for where
 that corpus lives and how to point the corpus-scan test at it). Unlike
@@ -39,6 +39,16 @@ real file writes it. Also exercises a `[Begin Action 1]` block alongside
 a plain 2D `[StageInfo]` (no 3D extension), and a lowercase `[BGdef]`
 section header.
 
+## `mugen-real-bgctrl-visible-stage.def`
+
+`Pokemon Gym` by ExShadow, a real community stage copied unmodified from
+the local Ikemen GO corpus (`.vibe/fixture-sources.md`'s "Local real-stage
+corpus"). Real BG controllers (backlog item 016): 50 BG elements with `ID =
+1..50`, and 50 `[BGCtrlDef Back]` groups (same name repeated) each with a
+lowercase `ctrlid = N` and `looptime = 201`, holding two `type = Visible`
+controllers (`time = 4(N-1)` value 1, `time = 4N` value 0). Used to pin
+`ResolveBGCtrlState` against values derived by hand from the file text.
+
 ## Regenerating / adding a new fixture
 
 There is no dedicated trimming tool the way `sff`'s `testdata/gen` is —
@@ -50,8 +60,16 @@ the relevant `_test.go` file) instead, not a fabricated "real" one here.
 
 ## `mugen-bgctrl-stage.def`
 
-Unlike the files above, this one is a **hand-written synthetic** MUGEN-style
+`mugen-bgctrl-stage.def` and `mugen-bgctrl-targeting.def` are
+**hand-written synthetic** fixtures, not real files. Unlike the real ones above, `mugen-bgctrl-stage.def` is a **hand-written synthetic** MUGEN-style
 stage (not copied from a real corpus) exercising `[BGCtrlDef]` / `[BGCtrl]`
 blocks: comments inside and between blocks, mixed-case headers and keys,
 blank lines, a reused group name, a comma-list `time`, a quoted value and a
 group with no controllers (backlog item 015).
+
+## `mugen-bgctrl-targeting.def`
+
+Also **hand-written synthetic**: BG `id`s, `ctrlID` targeting, group loops,
+time lists and ignored controller types for `ResolveBGCtrlState` (backlog
+item 016). Edge shapes the real file lacks (`enabled`, `posset`, `velset`,
+`anim`, a `time` list) live here only.

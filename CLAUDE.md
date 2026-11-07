@@ -32,6 +32,10 @@ Read **and** write support for MUGEN/Ikemen GO stage (background) `.def` files:
 - Sprite integration via `sff` — resolving BG element sprite references against `.sff` sprite sheets
 - BG element frame/animation resolution — parallax scroll deltas and animated background playback state
 
+## Compatibility target (MUST) <!-- keep -->
+
+Every feature in this repo must be compatible with **both MUGEN 1.0/1.1 and Ikemen GO**, extensions included, and validated against real community files — never MUGEN-only, never from memory. Where the two engines diverge, record the divergence and the chosen behavior in an ADR, and ground engine-behavior claims in a source (fixture, doc, engine source), marking anything unverified. This is an org-wide rule (`roadmap/repos.md`), already settled: do not ask the user whether it applies, and carry it as a 🔒 MUST in every need framing.
+
 ## Design constraints <!-- keep -->
 
 1. **No rendering dependency.** This module only parses/serializes data — no OpenGL, no canvas, nothing rendering-related. It must compile cleanly to WASM, and be usable as-is by both `stage-viewer-web` and `stage-editor`.

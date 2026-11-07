@@ -4,8 +4,8 @@
 
 The `stage` package (repo root) exposes a read path (`Parse`), three write
 paths (`Serialize`, `Document`/`ParseDocument`, `SerializeDef`), a
-sprite-resolution path (`SpriteResolver`), and two playback-resolution
-functions (`ResolveParallaxPosition`, `ResolveAnimationFrame`), over the
+sprite-resolution path (`SpriteResolver`), and three playback-resolution
+functions (`ResolveParallaxPosition`, `ResolveAnimationFrame`, `ResolveBGCtrlState`), over the
 pure-data model documented in [docs/data-model.md](data-model.md). See also
 [docs/wasm.md](wasm.md) for the browser-facing WebAssembly build of this
 same API.
@@ -289,3 +289,19 @@ actually referenced by a `BGElementAnim` element, re-parseable by `Parse`
 into an equivalent result. See
 `.vibe/decisions/004-bg-animation-model-and-parallax-formula.md` and
 `.vibe/decisions/006-begin-action-parsing-frame-fields-and-serialize-scope.md`.
+
+## `ResolveBGCtrlState`
+
+```go
+func ResolveBGCtrlState(s Stage, tick int) []BGLayerState
+```
+
+Returns, per element of `s.Elements` (same order), the state its `BGCtrl`
+controllers put it in at `tick`: `Name`, `Visible` and `Enabled` (default
+true), `OffsetX`/`OffsetY` (default 0), `AnimAction` (-1 = no override).
+Handled controller types: `visible`, `enabled` (also spelled `enable`), `posset`, `posadd`, `velset`,
+`veladd`, `anim`; others and unparsable values are ignored. A group's tick is
+`tick mod LoopTime` when `LoopTime > 0`; a controller targets elements whose
+`ID` equals its effective `ctrlID` (its own, else its group's; 0 = all).
+Controllers in effect fold in the chronological order they last fired (file
+order breaks ties). Never errors or panics. Full rules: decision `012`.

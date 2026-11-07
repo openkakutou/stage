@@ -1,0 +1,108 @@
+; Hand-written MUGEN-style stage exercising controller-driven layer state
+; (backlog 016): BG element ids, ctrlID targeting, loops, time lists.
+; (synthetic fixture, see testdata/README.md)
+
+[Info]
+name = "Targeting Test"
+
+[BGdef]
+spr = t.sff
+
+[BG Sky]
+type = normal
+id = 1
+spriteno = 0,0
+
+[BG Neon]
+type = anim
+ID = 2
+actionno = 10
+
+[BG Free]
+type = normal
+id = 3
+spriteno = 0,1
+
+[BG Plain]
+type = normal
+spriteno = 0,2
+
+[BGCtrlDef Lights]
+ctrlID = 1
+looptime = 120
+
+[BGCtrl Blink]
+type = Visible
+time = 30
+value = 0
+ctrlID = 1
+
+[BGCtrl Fade]
+type = PalFX
+time = 60,90,120
+add = 10,20,30
+
+[BGCtrl Shake]
+type = AnimTrans
+value = 2
+
+[BGCtrlDef Lights]
+looptime = 240
+
+[BGCtrl Again]
+type = enabled
+time = 5
+value = 0
+
+[BGCtrl Move]
+type = posset
+time = 10
+x = 5
+y = -3
+ctrlID = 2
+
+[BGCtrl Drift]
+type = velset
+time = 20
+x = 2
+y = 1
+ctrlID = 2
+
+[BGCtrl Faster]
+type = veladd
+time = 40
+x = 1
+ctrlID = 2
+
+[BGCtrl Bad]
+type = visible
+time = 1
+value = abc
+
+[BGCtrl Unknown]
+type = wobble
+time = 1
+value = 0
+
+[BGCtrl Switch]
+type = anim
+time = 50
+value = 11
+ctrlID = 2
+
+[BGCtrl Pulse]
+type = visible
+time = 100,110
+value = 0
+ctrlID = 3
+
+[BGCtrlDef Empty]
+ctrlID = 7
+
+[BGCtrlDef Tail]
+ctrlID = 2
+
+[BGCtrl Nudge]
+type = posadd
+time = 15
+x = 10

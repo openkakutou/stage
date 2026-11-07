@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A stage's animated-background controllers can now be played at any moment: for each background layer, the library tells whether it is shown or hidden, where it is offset and which animation it plays, following the loop and timing of both MUGEN and Ikemen GO stages, and the web build returns this for many moments and all layers in a single call. Background layers now keep the identifier written in the stage file, which is how controllers find their layers.
+
 ## [0.15.0] - 2026-11-07
 
 ### Added

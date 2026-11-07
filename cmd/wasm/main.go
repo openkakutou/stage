@@ -34,6 +34,7 @@ func main() {
 		"save":                   js.FuncOf(save),
 		"resolveAnimationFrames": js.FuncOf(resolveAnimationFrames),
 		"resolveSprites":         js.FuncOf(resolveSprites),
+		"resolveBGCtrlState":     js.FuncOf(resolveBGCtrlState),
 	}))
 
 	// Registering js.FuncOf callbacks does not keep the Go runtime alive on
@@ -341,4 +342,55 @@ func rgbaToJS(pixels []color.RGBA) js.Value {
 	arr := js.Global().Get("Uint8Array").New(len(buf))
 	js.CopyBytesToJS(arr, buf)
 	return arr
+}
+
+// bgCtrlStateRequest is resolveBGCtrlState's input: a stage (same shape as
+// load's stage) and the ticks to resolve it at.
+type bgCtrlStateRequest struct {
+	Stage stage.Stage `json:"stage"`
+	Ticks []int       `json:"ticks"`
+}
+
+// resolveBGCtrlState is OpenKakutouStage.resolveBGCtrlState(requestJSON) as
+// seen from JS: requestJSON is a JSON { stage, ticks } object. Returns
+// { states, error }: on success states holds one array of layer states
+// (stage.BGLayerState) per tick, in ticks order, each in element order. error
+// is only set (states null) when requestJSON cannot be parsed or the
+// argument count is wrong. Never throws.
+func resolveBGCtrlState(this js.Value, args []js.Value) any {
+	defer func() {
+		// See load's identical recover().
+		recover()
+	}()
+
+	if len(args) != 1 {
+		return resolveBGCtrlStateResult(nil, fmt.Errorf("OpenKakutouStage.resolveBGCtrlState: expected 1 argument (requestJSON), got %d", len(args)))
+	}
+	var req bgCtrlStateRequest
+	if err := json.Unmarshal([]byte(args[0].String()), &req); err != nil {
+		return resolveBGCtrlStateResult(nil, fmt.Errorf("OpenKakutouStage.resolveBGCtrlState: requestJSON: %w", err))
+	}
+	perTick := make([]any, len(req.Ticks))
+	for i, tick := range req.Ticks {
+		// Round-trip through JSON so BGLayerState's struct tags stay the
+		// single list of fields (js.ValueOf cannot take a struct).
+		data, err := json.Marshal(stage.ResolveBGCtrlState(req.Stage, tick))
+		if err != nil {
+			return resolveBGCtrlStateResult(nil, fmt.Errorf("OpenKakutouStage.resolveBGCtrlState: encoding states: %w", err))
+		}
+		var row []any
+		if err := json.Unmarshal(data, &row); err != nil {
+			return resolveBGCtrlStateResult(nil, fmt.Errorf("OpenKakutouStage.resolveBGCtrlState: decoding states: %w", err))
+		}
+		perTick[i] = row
+	}
+	return resolveBGCtrlStateResult(perTick, nil)
+}
+
+// resolveBGCtrlStateResult builds the { states, error } return shape.
+func resolveBGCtrlStateResult(states []any, err error) map[string]any {
+	if err != nil {
+		return map[string]any{"states": nil, "error": err.Error()}
+	}
+	return map[string]any{"states": states, "error": nil}
 }

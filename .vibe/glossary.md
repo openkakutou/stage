@@ -42,3 +42,13 @@ _Sources: `scaling.go`_
 A timed instruction a stage attaches to its backgrounds — for example showing or hiding a layer or changing a palette effect — grouped under a named `[BGCtrlDef]` group that carries a loop time and is followed by its `[BGCtrl]` blocks. Modeled by `BGCtrlDef` and `BGCtrl`; `Parse` reads them into `Stage.BGCtrlDefs`, keeping unknown types and their parameters as written.
 **Do not confuse with:** BG element, the layer a controller acts on, not the instruction itself.
 _Sources: `bgctrl.go`, `parser.go`_
+
+## Controller targeting (ctrlID)
+The rule deciding which BG elements a BG controller acts on: the controller's own `ctrlID` if nonzero, else its group's; an effective ID equal to an element's `id` targets it, and 0 targets every element (the 0 case is an assumption, see decision `012`). Modeled by `BGCtrl.CtrlID`, `BGCtrlDef.CtrlID` and `BGElement.ID`.
+**Do not confuse with:** the BG element's name, which is not unique and plays no part in targeting.
+_Sources: `bgctrl_resolve.go`, `bgctrl.go`_
+
+## Group tick
+The time a BG controller group sees at a given global tick: `tick mod LoopTime` when the group's `looptime` is positive, else the tick itself. Every controller timing in that group is read against it.
+**Do not confuse with:** the global playback tick, which keeps counting across loops.
+_Sources: `bgctrl_resolve.go`_
