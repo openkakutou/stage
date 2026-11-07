@@ -35,7 +35,7 @@ tolerated and ignored rather than rejected:
 | `[Model]` | `Model` — Ikemen GO's 3D model placement/lighting settings |
 | `[Scaling]` | `Scaling` — Ikemen GO's 3D perspective-scaling settings |
 | `[BG <name>]` (one per layer) | An entry in `Elements`, matched case-insensitively |
-| `[BGCtrlDef <name>]` + following `[BGCtrl <n>]` blocks | An entry in `BGCtrlDefs` (typed `type`/`ctrlID`/`time`/`looptime`, other keys raw in `Params`; read-only, not serialized) |
+| `[BGCtrlDef <name>]` + following `[BGCtrl <n>]` blocks | An entry in `BGCtrlDefs` (typed `type`/`ctrlID`/`time`/`looptime`, other keys raw in `Params`; written by `Serialize`, and an edit to only these entries is patched in place by `SerializeDef`) |
 | `[Begin Action N]` (one per animated layer's frame sequence) | An entry in `Animations`, keyed by action number — can appear anywhere in the file, not necessarily next to the element(s) referencing it |
 
 `BGdef.ModelFile`, `[Model]`, `[Scaling]`, and the 3D-only `[Camera]`/
@@ -166,6 +166,12 @@ stage with no original file yet.
   spuriously treated as an edit) is unchanged from what parsing `original`
   itself produces, the original bytes are written back out verbatim —
   byte-exact, matching `Document`'s guarantee.
+- When the only edit is to the values inside existing `BGCtrlDefs` groups and
+  controllers (same group and controller counts), the original bytes are
+  patched in place: only the edited lines change, and comments, ordering and
+  other sections stay intact. The patch is re-parsed and checked against `s`,
+  falling back to the next case if it cannot be proven equal — see
+  [`.vibe/decisions/011-targeted-bgctrl-patch-in-serializedef.md`](../.vibe/decisions/011-targeted-bgctrl-patch-in-serializedef.md).
 - Otherwise (`s` was edited, or `original` is empty), fresh text is
   generated via `Serialize`, reflecting `s`'s current values without
   preserving `original`'s comments/ordering.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Animated-background controllers are now written back out when a stage is saved, so a newly created stage keeps them, and editing a controller in an existing stage changes only that controller's own lines while comments and the rest of the file stay as they were.
+
 ## [0.14.0] - 2026-11-06
 
 ### Added

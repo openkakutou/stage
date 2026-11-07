@@ -147,22 +147,6 @@ func TestSerializeDef_UnmodifiedStageWithBGCtrl_ByteExactAfterJSONRoundTrip(t *t
 	}
 }
 
-func TestSerialize_IgnoresBGCtrlDefs(t *testing.T) {
-	plain := Stage{Name: "x"}
-	withCtrl := plain
-	withCtrl.BGCtrlDefs = []BGCtrlDef{{Name: "a", Controllers: []BGCtrl{{Type: "visible"}}}}
-	var a, b bytes.Buffer
-	if err := Serialize(&a, plain); err != nil {
-		t.Fatal(err)
-	}
-	if err := Serialize(&b, withCtrl); err != nil {
-		t.Fatal(err)
-	}
-	if a.String() != b.String() {
-		t.Errorf("Serialize output changed by BGCtrlDefs:\n%q\n%q", a.String(), b.String())
-	}
-}
-
 func TestParse_BGCtrl_TimeList_KeptRawInParams_StageStillParses(t *testing.T) {
 	src := "[BGCtrlDef x]\n[BGCtrl 1]\ntype = Visible\ntime = 0, 30, 60\nvisible = 1\n[BG floor]\ntype = normal\n"
 	s, err := Parse(strings.NewReader(src))

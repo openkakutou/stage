@@ -11,7 +11,7 @@ Root aggregate for a MUGEN/Ikemen GO stage. Zero-value valid (nil `Elements` ran
 | BGdef | BGdef | Stage-level settings |
 | Elements | []BGElement | BG elements/layers, in `.def` file order |
 | Animations | map[int]BGAnimation | Every `[Begin Action N]` block, keyed by action number — nil when the stage declares none |
-| BGCtrlDefs | []BGCtrlDef | Every `[BGCtrlDef]` group with its `[BGCtrl]` controllers, in file order — nil when the stage declares none (item 014, read-only: not serialized) |
+| BGCtrlDefs | []BGCtrlDef | Every `[BGCtrlDef]` group with its `[BGCtrl]` controllers, in file order — nil when the stage declares none (item 014; written by `Serialize`, edits patched in place by `SerializeDef`, item 015) |
 | CameraBounds | CameraBounds | Camera's own scroll clamp |
 | StageBoundaries | StageBoundaries | Character x-movement clamp (and z-movement clamp, 3D-only) |
 | Model | Model | 3D model placement/lighting (Ikemen GO extension, zero-valued for a 2D stage) |

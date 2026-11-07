@@ -19,7 +19,8 @@ import (
 // comments and all. Mutating Stage has no effect on Serialize's output:
 // regenerating text from an edited Stage while still preserving unrelated
 // comments/sections/ordering around the edit is a heavier per-line
-// reconciliation this type does not attempt.
+// reconciliation this type does not attempt (SerializeDef does it, for
+// BGCtrlDefs edits only).
 type Document struct {
 	Stage Stage
 

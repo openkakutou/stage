@@ -47,3 +47,11 @@ copy the real `.def` file directly from a local corpus (see
 the copied content; if a scenario needs bytes a real file doesn't already
 have, that scenario belongs in a hand-built synthetic fixture (inline in
 the relevant `_test.go` file) instead, not a fabricated "real" one here.
+
+## `mugen-bgctrl-stage.def`
+
+Unlike the files above, this one is a **hand-written synthetic** MUGEN-style
+stage (not copied from a real corpus) exercising `[BGCtrlDef]` / `[BGCtrl]`
+blocks: comments inside and between blocks, mixed-case headers and keys,
+blank lines, a reused group name, a comma-list `time`, a quoted value and a
+group with no controllers (backlog item 015).

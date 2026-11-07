@@ -24,6 +24,17 @@ import (
 // .vibe/decisions/005-wasm-entrypoint-mirrors-character-load-save-shape.md,
 // mirroring character's own SerializeDef/.vibe/decisions/028.
 //
+// When s differs from that baseline only in BGCtrlDefs, with the same
+// number of groups and the same number of controllers in each, the original
+// bytes are patched in place instead: only the lines of the changed
+// groups/controllers are altered (a changed value is replaced on its own
+// line, a new key is appended after the section's last key line, a removed
+// key's line is deleted), so comments, ordering, line endings and every
+// untouched section stay byte-identical. If the edit cannot be patched
+// safely (or the patched text would not parse back to s), the fresh
+// Serialize path above is used. Document is unchanged: mutating
+// Document.Stage still has no effect on Document.Serialize.
+//
 // A malformed original returns a descriptive error (from ParseDocument)
 // rather than silently falling back to a fresh serialize.
 func SerializeDef(original []byte, s Stage) ([]byte, error) {
@@ -45,6 +56,10 @@ func SerializeDef(original []byte, s Stage) ([]byte, error) {
 				return nil, fmt.Errorf("stage: writing unmodified stage definition: %w", err)
 			}
 			return buf.Bytes(), nil
+		}
+
+		if patched, ok := patchBGCtrlDefs(original, baseline, edited); ok {
+			return patched, nil
 		}
 	}
 

@@ -3,6 +3,7 @@ package stage
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 // Serialize writes s to w as MUGEN/Ikemen GO stage .def text: an "[Info]"
@@ -31,6 +32,12 @@ import (
 // s.BGdef.ModelFile-less (2D) Stage serializes byte-for-byte the same way
 // it did before this 3D stage extension existed, since none of it applies
 // to a 2D stage.
+//
+// After everything above, each s.BGCtrlDefs group is written as a
+// "[BGCtrlDef <name>]" section followed by one "[BGCtrl <n>]" section per
+// controller (ctrlID/looptime/time omitted when zero, Params in order);
+// Parse reads them back into an equal BGCtrlDefs, except for values that
+// contain ';' or a line break.
 func Serialize(w io.Writer, s Stage) error {
 	is3D := s.BGdef.ModelFile != ""
 
@@ -70,7 +77,56 @@ func Serialize(w io.Writer, s Stage) error {
 	if err := writeBGAnimationBlocks(w, s); err != nil {
 		return err
 	}
+	return writeBGCtrlDefs(w, s.BGCtrlDefs)
+}
+
+// writeBGCtrlDefs writes every group as "[BGCtrlDef <name>]" (no trailing
+// name when empty) followed by its controllers as "[BGCtrl <n>]", n being
+// the controller's 1-based index in its group (Parse ignores the name).
+// ctrlID, looptime and time are omitted when zero, matching Parse's absent
+// default; Params follow in order.
+func writeBGCtrlDefs(w io.Writer, defs []BGCtrlDef) error {
+	var b strings.Builder
+	for _, def := range defs {
+		b.WriteString("[BGCtrlDef")
+		if def.Name != "" {
+			b.WriteString(" " + def.Name)
+		}
+		b.WriteString("]\n")
+		writeBGCtrlInt(&b, "ctrlID", def.CtrlID)
+		writeBGCtrlInt(&b, "looptime", def.LoopTime)
+		b.WriteString("\n")
+		for i, c := range def.Controllers {
+			fmt.Fprintf(&b, "[BGCtrl %d]\ntype = %s\n", i+1, formatBGCtrlValue(c.Type))
+			writeBGCtrlInt(&b, "ctrlID", c.CtrlID)
+			writeBGCtrlInt(&b, "time", c.Time)
+			for _, p := range c.Params {
+				fmt.Fprintf(&b, "%s = %s\n", p.Key, formatBGCtrlValue(p.Value))
+			}
+			b.WriteString("\n")
+		}
+	}
+	if _, err := io.WriteString(w, b.String()); err != nil {
+		return fmt.Errorf("stage: writing BGCtrlDef sections: %w", err)
+	}
 	return nil
+}
+
+func writeBGCtrlInt(b *strings.Builder, key string, n int) {
+	if n != 0 {
+		fmt.Fprintf(b, "%s = %d\n", key, n)
+	}
+}
+
+// formatBGCtrlValue renders a raw BGCtrl value so Parse reads it back
+// unchanged: a value Parse would trim or unquote is wrapped in quotes.
+// shortcut: a value containing ';' or a line break cannot be represented,
+// it is written as-is and will not round-trip.
+func formatBGCtrlValue(v string) string {
+	if v != strings.TrimSpace(v) || (len(v) >= 2 && v[0] == '"' && v[len(v)-1] == '"') {
+		return `"` + v + `"`
+	}
+	return v
 }
 
 func writeInfoSection(w io.Writer, s Stage) error {
