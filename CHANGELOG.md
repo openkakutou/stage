@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-19
+
+### Added
+
+- Stages now expose the camera's tension and starting position, each background layer's starting scale, scale change and top/bottom horizontal scale, and the ground line resolved from the layer the stage links it to, with Ikemen GO's values when the stage file leaves them out. They are also returned by the web build and written back when a stage is saved.
+
 ## [0.16.0] - 2026-11-07
 
 ### Added
@@ -113,7 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Defined the stage data model (`Stage`, `BGdef`, `BGElement`, `CameraBounds`, `StageBoundaries`) that will represent MUGEN/Ikemen GO stage backgrounds — layers, camera scroll limits, and character movement limits — once `.def` stage file reading is implemented
 
-[Unreleased]: https://github.com/openkakutou/stage/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/openkakutou/stage/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/openkakutou/stage/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/openkakutou/stage/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/openkakutou/stage/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/openkakutou/stage/compare/v0.13.0...v0.14.0

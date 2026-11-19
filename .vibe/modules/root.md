@@ -4,8 +4,8 @@
 **Exports:**
 - `Version` (string constant)
 - `Stage` — root aggregate: `Name`, `Author` (from `.def` `[Info]`), `MusicFile` (from `.def` `[Music]` "bgmusic", item 013), `BGdef`, `Elements []BGElement`, `Animations map[int]BGAnimation` (keyed by action number, item 009), `CameraBounds`, `StageBoundaries`, `Model`, `Scaling`, `PlayerStartZ`
-- `BGdef` — stage-level settings (`SpriteFile`, `LocalCoordWidth`/`LocalCoordHeight`, `ZOffset`, `XScale`/`YScale` — default to 1 when `[StageInfo]` is present but omits them, item 012, `.vibe/decisions/009` — `ZoomOut`/`ZoomIn`, plus 3D-only `ModelFile`, `Near`/`Far`/`FOV`/`YShift`)
-- `BGElement` — one BG layer (`Name`, `Type`, `Sprite`, `ActionNumber`, `LayerNo`, `StartX`/`StartY`, `DeltaX`/`DeltaY`, `TileX`/`TileY`, `TileSpacingX`/`TileSpacingY`)
+- `BGdef` — stage-level settings (`SpriteFile`, `LocalCoordWidth`/`LocalCoordHeight`, `ZOffset`, `XScale`/`YScale` — default to 1 when `[StageInfo]` is present but omits them, item 012, `.vibe/decisions/009` — `ZoomOut`/`ZoomIn`, `[Camera]` `CameraStartX`/`CameraStartY` (0) and `Tension` (50 when `[Camera]` omits it), `ZOffsetLink *int` (nil when absent) and the parse-computed `ResolvedZOffset` (ZOffset + linked element start y * YScale, Ikemen stage.go:1749-1761; positionlink not modeled), item 021, plus 3D-only `ModelFile`, `Near`/`Far`/`FOV`/`YShift`)
+- `BGElement` — one BG layer (`Name`, `Type`, `Sprite`, `ActionNumber`, `LayerNo`, `StartX`/`StartY`, `DeltaX`/`DeltaY`, `TileX`/`TileY`, `TileSpacingX`/`TileSpacingY`, `ScaleStartX`/`ScaleStartY` (default 1), `ScaleDeltaX`/`ScaleDeltaY` (default 0), `XScaleTop`/`XScaleBottom` (`xscale`, default 1; a single value sets only the first component), item 021)
 - `BGElement.ID` — the BG block's `id` key (0 when absent), the target of a controller's `ctrlID`; written by `Serialize` only when nonzero (item 016)
 - `BGLayerState` — a BG element's controller-driven state at a tick: `Name`, `Visible`, `Enabled`, `OffsetX`/`OffsetY`, `AnimAction` (-1 = no override), json-tagged for WASM (item 016, `bgctrl_resolve.go`)
 - `BGElementType` (string enum) with constants `BGElementNormal`, `BGElementParallax`, `BGElementAnim`

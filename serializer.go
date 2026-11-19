@@ -250,6 +250,11 @@ func writeStageInfoSection(w io.Writer, bgdef BGdef) error {
 	if _, err := fmt.Fprintf(w, "zoffset = %d\n", bgdef.ZOffset); err != nil {
 		return fmt.Errorf("stage: writing zoffset: %w", err)
 	}
+	if bgdef.ZOffsetLink != nil {
+		if _, err := fmt.Fprintf(w, "zoffsetlink = %d\n", *bgdef.ZOffsetLink); err != nil {
+			return fmt.Errorf("stage: writing zoffsetlink: %w", err)
+		}
+	}
 	if _, err := fmt.Fprintf(w, "xscale = %s\n", formatStageFloat(bgdef.XScale)); err != nil {
 		return fmt.Errorf("stage: writing xscale: %w", err)
 	}
@@ -274,6 +279,9 @@ func writeCameraSection(w io.Writer, s Stage) error {
 		{"boundright", s.CameraBounds.Right},
 		{"boundhigh", s.CameraBounds.High},
 		{"boundlow", s.CameraBounds.Low},
+		{"startx", s.BGdef.CameraStartX},
+		{"starty", s.BGdef.CameraStartY},
+		{"tension", s.BGdef.Tension},
 	}
 	for _, f := range fields {
 		if _, err := fmt.Fprintf(w, "%s = %d\n", f.key, f.value); err != nil {
@@ -382,6 +390,19 @@ func writeBGElementSection(w io.Writer, el BGElement) error {
 	}
 	if _, err := fmt.Fprintf(w, "tilespacing = %d,%d\n", el.TileSpacingX, el.TileSpacingY); err != nil {
 		return fmt.Errorf("stage: writing tilespacing: %w", err)
+	}
+	scalePairs := []struct {
+		key  string
+		a, b float64
+	}{
+		{"scalestart", el.ScaleStartX, el.ScaleStartY},
+		{"scaledelta", el.ScaleDeltaX, el.ScaleDeltaY},
+		{"xscale", el.XScaleTop, el.XScaleBottom},
+	}
+	for _, p := range scalePairs {
+		if _, err := fmt.Fprintf(w, "%s = %s,%s\n", p.key, formatStageFloat(p.a), formatStageFloat(p.b)); err != nil {
+			return fmt.Errorf("stage: writing %s: %w", p.key, err)
+		}
 	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("stage: writing section separator: %w", err)

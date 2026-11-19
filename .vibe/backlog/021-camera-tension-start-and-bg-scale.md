@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 # Camera Tension, Start and BG Scale
 
@@ -9,9 +9,9 @@ The stage library does not expose `[Camera]` `tension`, `startx`/`starty`, nor t
 🔒 MUST: MUGEN 1.0/1.1 and Ikemen GO compatibility (roadmap decision `038`).
 
 ## Acceptance Criteria
-- [ ] `[Camera]` tension, startx and starty, and each BG element's scalestart, xscale and scaledelta, are parsed with Ikemen GO's defaults, with the source cited
-- [ ] `zoffsetlink` is resolved to the linked BG element as Ikemen GO does (stage.go:1758)
-- [ ] The new fields survive the JSON shape the WebAssembly build returns
+- [x] `[Camera]` tension, startx and starty, and each BG element's scalestart, xscale and scaledelta, are parsed with Ikemen GO's defaults, with the source cited
+- [x] `zoffsetlink` is resolved to the linked BG element as Ikemen GO does (stage.go:1758)
+- [x] The new fields survive the JSON shape the WebAssembly build returns
 
 ## Notes
 Found by game#056 (2026-11-19). Stage used: quick-versus-bootstrap Training.

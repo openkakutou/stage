@@ -49,6 +49,15 @@ lowercase `ctrlid = N` and `looptime = 201`, holding two `type = Visible`
 controllers (`time = 4(N-1)` value 1, `time = 4N` value 0). Used to pin
 `ResolveBGCtrlState` against values derived by hand from the file text.
 
+## `ikemen-training-stage.def`
+
+`Training.def` ("SF IV - Training" by The Pierrot, modified by Beterhans),
+copied unmodified from the quick-versus-bootstrap Ikemen GO install's
+`stages/Training/`. Exercises `[Camera]` `tension = 400`/`startx`/`starty`,
+`[StageInfo]` `zoffsetlink = 3` (resolved to `[BG Floor]`'s start y 640),
+and BG elements' `scalestart = 2.4, 2.4`, parallax `xscale` pairs and
+`scaledelta` (backlog item 021).
+
 ## Regenerating / adding a new fixture
 
 There is no dedicated trimming tool the way `sff`'s `testdata/gen` is —

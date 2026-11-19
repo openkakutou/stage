@@ -22,6 +22,24 @@ type BGdef struct {
 	// stage's local coordinate space, in pixels (.def [StageInfo]
 	// "zoffset").
 	ZOffset int `json:"zOffset"`
+	// ZOffsetLink is the BG element id the ground line follows (.def
+	// [StageInfo] "zoffsetlink"); nil when absent (Ikemen GO's -1,
+	// stage.go:1151). ZOffset keeps the value as written.
+	ZOffsetLink *int `json:"zOffsetLink"`
+	// ResolvedZOffset is the ground line Ikemen GO actually uses: ZOffset
+	// plus int(start y * YScale) of the first BG element whose ID equals
+	// ZOffsetLink (stage.go:1749-1761), or ZOffset when there is no link
+	// or no such element. Computed by Parse; Serialize ignores it.
+	ResolvedZOffset int `json:"resolvedZOffset"`
+	// CameraStartX and CameraStartY are the camera's starting position
+	// (.def [Camera] "startx"/"starty"), 0 when absent (stage.go:1374).
+	CameraStartX int `json:"cameraStartX"`
+	CameraStartY int `json:"cameraStartY"`
+	// Tension is the distance from the screen edge at which a player
+	// pushes the camera (.def [Camera] "tension", stage.go:1384). Parse
+	// defaults it to Ikemen GO's 50 (camera.go:85) when a "[Camera]"
+	// section omits it.
+	Tension int `json:"tension"`
 	// ZoomOut is the camera's maximum zoom-out scale factor, e.g. 0.75
 	// means the camera can shrink the view to 75% (.def [Camera]
 	// "zoomout").

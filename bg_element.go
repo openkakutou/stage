@@ -76,4 +76,19 @@ type BGElement struct {
 	// element "tilespacing").
 	TileSpacingX int `json:"tileSpacingX"`
 	TileSpacingY int `json:"tileSpacingY"`
+	// ScaleStartX and ScaleStartY are the element's draw scale (.def BG
+	// element "scalestart", stage.go:354); Parse defaults them to 1
+	// (stage.go:181).
+	ScaleStartX float64 `json:"scaleStartX"`
+	ScaleStartY float64 `json:"scaleStartY"`
+	// ScaleDeltaX and ScaleDeltaY change the scale per unit of camera
+	// movement (.def BG element "scaledelta", stage.go:355); 0 when absent.
+	ScaleDeltaX float64 `json:"scaleDeltaX"`
+	ScaleDeltaY float64 `json:"scaleDeltaY"`
+	// XScaleTop and XScaleBottom are a parallax element's horizontal scale
+	// at its top and bottom edges (.def BG element "xscale", Ikemen GO's
+	// rasterx, stage.go:445); Parse defaults them to 1 (stage.go:179).
+	// Ikemen GO reads them only for a parallax element without "width".
+	XScaleTop    float64 `json:"xScaleTop"`
+	XScaleBottom float64 `json:"xScaleBottom"`
 }

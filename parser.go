@@ -122,7 +122,8 @@ func Parse(r io.Reader) (Stage, error) {
 
 			raw := strings.TrimSpace(line[1 : len(line)-1])
 			if name, ok := bgElementName(raw); ok {
-				current = &BGElement{Name: name}
+				// Ikemen GO's newBackGround defaults (stage.go:176-181).
+				current = &BGElement{Name: name, ScaleStartX: 1, ScaleStartY: 1, XScaleTop: 1, XScaleBottom: 1}
 				currentSection = "bg"
 				continue
 			}
@@ -159,6 +160,11 @@ func Parse(r io.Reader) (Stage, error) {
 				// TestParse_NoStageInfoSection_LeavesXScaleYScaleAtZeroValue).
 				stage.BGdef.XScale = 1
 				stage.BGdef.YScale = 1
+			}
+			if currentSection == "camera" {
+				// Ikemen GO's default tension (camera.go:85), applied the
+				// same section-start way as [StageInfo]'s xscale/yscale.
+				stage.BGdef.Tension = 50
 			}
 			continue
 		}
@@ -220,6 +226,12 @@ func Parse(r io.Reader) (Stage, error) {
 					return Stage{}, fmt.Errorf("stage: line %d: invalid zoffset %q: %w", lineNumber, value, err)
 				}
 				stage.BGdef.ZOffset = n
+			case strings.EqualFold(key, "zoffsetlink"):
+				n, err := strconv.Atoi(strings.TrimSpace(value))
+				if err != nil {
+					return Stage{}, fmt.Errorf("stage: line %d: invalid zoffsetlink %q: %w", lineNumber, value, err)
+				}
+				stage.BGdef.ZOffsetLink = &n
 			case strings.EqualFold(key, "xscale"):
 				f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
 				if err != nil {
@@ -292,6 +304,7 @@ func Parse(r io.Reader) (Stage, error) {
 		}
 	}
 	stage.Elements = elements
+	stage.BGdef.ResolvedZOffset = resolveZOffset(stage.BGdef, elements)
 
 	return stage, nil
 }
@@ -346,6 +359,24 @@ func parseCameraKey(stage *Stage, key, value string, lineNumber int) error {
 			return fmt.Errorf("stage: line %d: invalid boundlow %q: %w", lineNumber, value, err)
 		}
 		stage.CameraBounds.Low = n
+	case strings.EqualFold(key, "startx"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid startx %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.CameraStartX = n
+	case strings.EqualFold(key, "starty"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid starty %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.CameraStartY = n
+	case strings.EqualFold(key, "tension"):
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			return fmt.Errorf("stage: line %d: invalid tension %q: %w", lineNumber, value, err)
+		}
+		stage.BGdef.Tension = n
 	case strings.EqualFold(key, "zoomout"):
 		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
 		if err != nil {
@@ -554,7 +585,56 @@ func parseBGElementKey(el *BGElement, key, value string, lineNumber int) error {
 			return fmt.Errorf("stage: line %d: invalid tilespacing %q: %w", lineNumber, value, err)
 		}
 		el.TileSpacingX, el.TileSpacingY = x, y
+	case strings.EqualFold(key, "scalestart"):
+		if err := parseFloatPairPartial(value, &el.ScaleStartX, &el.ScaleStartY); err != nil {
+			return fmt.Errorf("stage: line %d: invalid scalestart %q: %w", lineNumber, value, err)
+		}
+	case strings.EqualFold(key, "scaledelta"):
+		if err := parseFloatPairPartial(value, &el.ScaleDeltaX, &el.ScaleDeltaY); err != nil {
+			return fmt.Errorf("stage: line %d: invalid scaledelta %q: %w", lineNumber, value, err)
+		}
+	case strings.EqualFold(key, "xscale"):
+		if err := parseFloatPairPartial(value, &el.XScaleTop, &el.XScaleBottom); err != nil {
+			return fmt.Errorf("stage: line %d: invalid xscale %q: %w", lineNumber, value, err)
+		}
 	}
+	return nil
+}
+
+// resolveZOffset returns the ground line Ikemen GO uses (stage.go:1749-1761):
+// bgdef.ZOffset plus int(start y * YScale) of the first element whose ID
+// equals bgdef.ZOffsetLink. shortcut: "positionlink" is not modeled, so a
+// linked element's start is not offset by the element it is position-linked to.
+func resolveZOffset(bgdef BGdef, elements []BGElement) int {
+	if bgdef.ZOffsetLink == nil {
+		return bgdef.ZOffset
+	}
+	for _, el := range elements {
+		if el.ID == *bgdef.ZOffsetLink {
+			return bgdef.ZOffset + int(float64(el.StartY)*bgdef.YScale)
+		}
+	}
+	return bgdef.ZOffset
+}
+
+// parseFloatPairPartial parses a "a[,b]" value into a and b the way Ikemen
+// GO's readF32ForStage does (common.go:1192): a single value sets only a,
+// leaving b at its current value.
+func parseFloatPairPartial(value string, a, b *float64) error {
+	parts := strings.SplitN(value, ",", 2)
+	x, err := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+	if err != nil {
+		return err
+	}
+	*a = x
+	if len(parts) == 1 {
+		return nil
+	}
+	y, err := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
+	if err != nil {
+		return err
+	}
+	*b = y
 	return nil
 }
 

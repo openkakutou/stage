@@ -139,7 +139,7 @@ func TestParse_RealNonDefaultScaleFixture_DecodesXScaleYScale(t *testing.T) {
 // comment placement, blank lines, and section ordering are exactly the
 // kind of shape synthetic test data doesn't reliably exercise.
 func TestDocument_RealFixtures_RoundTripByteExact(t *testing.T) {
-	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def"} {
+	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def", "ikemen-training-stage.def"} {
 		t.Run(name, func(t *testing.T) {
 			data := readTestdataFile(t, name)
 
@@ -162,7 +162,7 @@ func TestDocument_RealFixtures_RoundTripByteExact(t *testing.T) {
 // SerializeDef's own byte-exact-when-unmodified guarantee (decision 005)
 // holds for both real, vendored fixtures, not just hand-built ones.
 func TestSerializeDef_RealFixtures_UnmodifiedSaveIsByteExact(t *testing.T) {
-	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def"} {
+	for _, name := range []string{"mugen-2d-stage.def", "ikemen-go-3d-model-stage.def", "mugen-nondefault-scale-stage.def", "ikemen-training-stage.def"} {
 		t.Run(name, func(t *testing.T) {
 			data := readTestdataFile(t, name)
 

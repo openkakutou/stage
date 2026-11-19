@@ -16,6 +16,7 @@ func TestSerialize_FullStage_RoundTripsThroughParseWithEquivalentStructure(t *te
 			LocalCoordWidth:  320,
 			LocalCoordHeight: 240,
 			ZOffset:          220,
+			ResolvedZOffset:  220,
 			ZoomOut:          0.75,
 			ZoomIn:           1.5,
 		},
