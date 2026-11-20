@@ -253,6 +253,10 @@ func Parse(r io.Reader) (Stage, error) {
 			if err := parsePlayerInfoKey(&stage, key, value, lineNumber); err != nil {
 				return Stage{}, err
 			}
+		case "bound":
+			if err := parseBoundKey(&stage, key, value, lineNumber); err != nil {
+				return Stage{}, err
+			}
 		case "bg":
 			if current == nil {
 				continue
@@ -414,6 +418,26 @@ func parseCameraKey(stage *Stage, key, value string, lineNumber int) error {
 		}
 		stage.BGdef.YShift = f
 	}
+	return nil
+}
+
+// parseBoundKey applies a "[Bound]" section key=value pair: the screen
+// margins (Ikemen GO stage.go:1340-1344).
+func parseBoundKey(stage *Stage, key, value string, lineNumber int) error {
+	var target **int
+	switch {
+	case strings.EqualFold(key, "screenleft"):
+		target = &stage.StageBoundaries.ScreenLeft
+	case strings.EqualFold(key, "screenright"):
+		target = &stage.StageBoundaries.ScreenRight
+	default:
+		return nil
+	}
+	n, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil {
+		return fmt.Errorf("stage: line %d: invalid %s %q: %w", lineNumber, strings.ToLower(key), value, err)
+	}
+	*target = &n
 	return nil
 }
 

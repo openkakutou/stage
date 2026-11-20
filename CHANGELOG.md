@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-21
+
+### Added
+- The `[Bound]` section's `screenleft` and `screenright` (the distance a character keeps from each screen edge, Ikemen GO stage.go:1340-1344) are read into `StageBoundaries.ScreenLeft` / `ScreenRight`, left unset (nil) when the file gives none, and written back.
+
 ## [0.17.0] - 2026-11-19
 
 ### Added

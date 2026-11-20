@@ -47,6 +47,12 @@ type StageBoundaries struct {
 	// section.
 	TopBound    float64 `json:"topBound"`
 	BottomBound float64 `json:"bottomBound"`
+	// ScreenLeft and ScreenRight are the distances a character keeps from
+	// the left and right screen edges (.def [Bound] "screenleft" /
+	// "screenright", Ikemen GO stage.go:1340-1344); nil when the file gives
+	// none, the engine's default (15 at a 320-wide localcoord) then applies.
+	ScreenLeft  *int `json:"screenLeft,omitempty"`
+	ScreenRight *int `json:"screenRight,omitempty"`
 }
 
 // PlayerStartZ holds each of up to 8 players' starting position on the

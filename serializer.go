@@ -69,6 +69,9 @@ func Serialize(w io.Writer, s Stage) error {
 	if err := writePlayerInfoSection(w, s); err != nil {
 		return err
 	}
+	if err := writeBoundSection(w, s.StageBoundaries); err != nil {
+		return err
+	}
 	for _, el := range s.Elements {
 		if err := writeBGElementSection(w, el); err != nil {
 			return err
@@ -312,6 +315,26 @@ func writeCameraSection(w io.Writer, s Stage) error {
 	}
 	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("stage: writing section separator: %w", err)
+	}
+	return nil
+}
+
+// writeBoundSection writes [Bound] when the stage sets a screen margin.
+func writeBoundSection(w io.Writer, b StageBoundaries) error {
+	if b.ScreenLeft == nil && b.ScreenRight == nil {
+		return nil
+	}
+	var sb strings.Builder
+	sb.WriteString("[Bound]\n")
+	if b.ScreenLeft != nil {
+		fmt.Fprintf(&sb, "screenleft = %d\n", *b.ScreenLeft)
+	}
+	if b.ScreenRight != nil {
+		fmt.Fprintf(&sb, "screenright = %d\n", *b.ScreenRight)
+	}
+	sb.WriteString("\n")
+	if _, err := io.WriteString(w, sb.String()); err != nil {
+		return fmt.Errorf("stage: writing [Bound]: %w", err)
 	}
 	return nil
 }
