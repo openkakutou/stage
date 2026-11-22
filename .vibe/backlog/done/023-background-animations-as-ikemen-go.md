@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 # Background animations as Ikemen GO plays them
 
@@ -12,5 +12,8 @@ Found by the audit of 2026-11-21 (high and medium, to re-check against anim.go):
 🔒 MUST: Ikemen GO behaviour (roadmap decision `038`).
 
 ## Acceptance Criteria
-- [ ] Each case above follows Ikemen GO, with a test; decision 004 is superseded where it differs
-- [ ] A stage action with Clsn and Interpolate lines loads
+- [x] Each case above follows Ikemen GO, with a test; decision 004 is superseded where it differs
+- [x] A stage action with Clsn and Interpolate lines loads
+
+## Done
+2026-11-22 - v0.18.2, decision 013. A frame line starting with a digit but holding a non-numeric field still errors (Ikemen GO reads it as 0 with its lenient Atoi): left as is, no real file found with it.

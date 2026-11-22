@@ -85,8 +85,14 @@ func Parse(r io.Reader) (Stage, error) {
 			current = nil
 		}
 	}
+	// loopStartAtLastFrame is the loop start in effect when the current
+	// action's last frame was read (Ikemen GO's ols, anim.go:383).
+	loopStartAtLastFrame := 0
 	flushCurrentAnimation := func() {
 		if currentAnimation != nil {
+			if currentAnimation.LoopStart >= len(currentAnimation.Frames) {
+				currentAnimation.LoopStart = loopStartAtLastFrame
+			}
 			if stage.Animations == nil {
 				stage.Animations = make(map[int]BGAnimation)
 			}
@@ -148,6 +154,7 @@ func Parse(r io.Reader) (Stage, error) {
 					return Stage{}, fmt.Errorf("stage: line %d: invalid action number %q: %w", lineNumber, m[1], err)
 				}
 				currentAnimation = &BGAnimation{}
+				loopStartAtLastFrame = 0
 				currentActionNumber = number
 				currentSection = "beginaction"
 				continue
@@ -178,14 +185,21 @@ func Parse(r io.Reader) (Stage, error) {
 			if currentAnimation == nil {
 				continue
 			}
-			if strings.EqualFold(line, "loopstart") {
+			// Ikemen GO matches loopstart as a prefix (anim.go:395) and
+			// skips any other line not starting with a digit or '-'
+			// (ReadAnimFrame, anim.go:47-49): Clsn, Interpolate.
+			if strings.HasPrefix(strings.ToLower(line), "loopstart") {
 				currentAnimation.LoopStart = len(currentAnimation.Frames)
+				continue
+			}
+			if !startsAsFrameLine(line) {
 				continue
 			}
 			frame, err := parseBGAnimFrameLine(line)
 			if err != nil {
 				return Stage{}, fmt.Errorf("stage: line %d: %w", lineNumber, err)
 			}
+			loopStartAtLastFrame = currentAnimation.LoopStart
 			currentAnimation.Frames = append(currentAnimation.Frames, frame)
 			continue
 		}
@@ -674,6 +688,12 @@ func parseFloatPairPartial(value string, a, b *float64) error {
 // BGAnimFrame models). x/y/flip/blend, if present, are validated as part
 // of the minimum-field-count shape but not stored -- see
 // .vibe/decisions/006.
+// startsAsFrameLine is ReadAnimFrame's first check (anim.go:47-49).
+func startsAsFrameLine(line string) bool {
+	c := line[0]
+	return c == '-' || ('0' <= c && c <= '9')
+}
+
 func parseBGAnimFrameLine(line string) (BGAnimFrame, error) {
 	fields := strings.Split(line, ",")
 	if len(fields) < 5 {

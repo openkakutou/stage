@@ -65,7 +65,10 @@ func ResolveParallaxPosition(element BGElement, cameraX, cameraY float64) (x, y 
 // Frames[LoopStart:] indefinitely.
 //
 // A frame with a zero or negative Time is instantaneous — it is skipped
-// when walking elapsed time, but does not otherwise break resolution.
+// when walking elapsed time, but does not otherwise break resolution. A
+// last frame of Time -1 is the exception, as in Ikemen GO (anim.go:441-443,
+// 931-946): the animation plays its timed frames once, then holds that last
+// frame forever, without looping.
 //
 // ResolveAnimationFrame never panics or returns an out-of-bounds frame: an
 // empty Frames sequence, an out-of-range LoopStart, or a sequence whose
@@ -77,6 +80,11 @@ func ResolveAnimationFrame(anim BGAnimation, elapsedTicks int) SpriteRef {
 	}
 	if anim.LoopStart < 0 || anim.LoopStart >= len(anim.Frames) {
 		return blankSpriteRef
+	}
+
+	last := len(anim.Frames) - 1
+	if anim.Frames[last].Time == -1 {
+		return holdingFrame(anim.Frames, elapsedTicks)
 	}
 
 	firstPassDuration := totalDuration(anim.Frames)
@@ -100,6 +108,20 @@ func ResolveAnimationFrame(anim BGAnimation, elapsedTicks int) SpriteRef {
 
 	loopElapsed := (elapsedTicks - firstPassDuration) % loopDuration
 	return frameAtOffset(loopFrames, loopElapsed)
+}
+
+// holdingFrame resolves an animation whose last frame has Time -1: the
+// timed frames before it play once, then the last frame stays.
+func holdingFrame(frames []BGAnimFrame, elapsedTicks int) SpriteRef {
+	last := len(frames) - 1
+	played := totalDuration(frames[:last])
+	if elapsedTicks < 0 {
+		elapsedTicks = 0
+	}
+	if elapsedTicks < played {
+		return frameAtOffset(frames[:last], elapsedTicks)
+	}
+	return frames[last].Sprite
 }
 
 // totalDuration sums the positive Time of every frame in frames, treating a

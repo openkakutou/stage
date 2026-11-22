@@ -177,14 +177,16 @@ func TestParse_MalformedFrameLine_TooFewFields_ReturnsLineNumberedError(t *testi
 	}
 }
 
-func TestParse_MalformedFrameLine_NonNumericGroup_ReturnsLineNumberedError(t *testing.T) {
-	src := "[Begin Action 1]\nabc,0, 0,0, 5\n"
-	_, err := Parse(strings.NewReader(src))
-	if err == nil {
-		t.Fatal("expected an error")
+// A line starting with a letter is not a frame for Ikemen GO (anim.go:47-49):
+// it is skipped, not an error.
+func TestParse_LineStartingWithALetter_IsSkippedNotAFrame(t *testing.T) {
+	src := "[Begin Action 1]\nabc,0, 0,0, 5\n1,0, 0,0, 5\n"
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "line 2") {
-		t.Errorf("expected error to mention line 2, got: %v", err)
+	if got := len(s.Animations[1].Frames); got != 1 {
+		t.Errorf("frames = %d, want 1", got)
 	}
 }
 
@@ -286,5 +288,38 @@ func TestSerialize_WritesEachReferencedActionNumberOnlyOnce(t *testing.T) {
 	count := strings.Count(buf.String(), "[Begin Action 10]")
 	if count != 1 {
 		t.Errorf("expected exactly 1 [Begin Action 10] block, got %d:\n%s", count, buf.String())
+	}
+}
+
+// anim.go:383, 440-442: a Loopstart after the last frame falls back to the
+// loop start in effect when that frame was read.
+func TestParse_LoopstartAfterTheLastFrame_FallsBackToTheEarlierLoopStart(t *testing.T) {
+	src := "[Begin Action 10]\n10,0,0,0,5\nLoopstart\n10,1,0,0,5\n10,2,0,0,5\nLoopstart\n[Begin Action 11]\n11,0,0,0,5\n11,1,0,0,5\nLoopstart\n"
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Animations[10].LoopStart; got != 1 {
+		t.Errorf("action 10 LoopStart = %d, want 1", got)
+	}
+	if got := s.Animations[11].LoopStart; got != 0 {
+		t.Errorf("action 11 LoopStart = %d, want 0", got)
+	}
+	if got := ResolveAnimationFrame(s.Animations[11], 0); got != (SpriteRef{Group: 11, Image: 0}) {
+		t.Errorf("action 11 at tick 0: %+v, want 11,0 (not blank)", got)
+	}
+}
+
+// anim.go:47-49, 395: lines that do not start with a digit or '-' are
+// skipped (Clsn, Interpolate), and loopstart matches as a prefix.
+func TestParse_ActionLinesIkemenGOSkips_AreSkipped(t *testing.T) {
+	src := "[Begin Action 20]\nClsn2Default: 1\n Clsn2[0] = -10,0,10,-80\n20,0,0,0,4\nLoopstart:\nInterpolate Offset\n20,1,0,0,4\n"
+	s, err := Parse(strings.NewReader(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := s.Animations[20]
+	if len(a.Frames) != 2 || a.LoopStart != 1 {
+		t.Errorf("action 20 = %+v, want 2 frames looping from 1", a)
 	}
 }

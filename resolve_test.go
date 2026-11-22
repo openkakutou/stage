@@ -140,10 +140,31 @@ func TestResolveAnimationFrame_ReturnsBlankSentinelForOutOfRangeLoopStart(t *tes
 	}
 }
 
+// anim.go:441-443, 931-946: a last frame of time -1 makes the animation
+// stop on it; with no earlier timed frame it shows at once.
+func TestResolveAnimationFrame_ALastFrameOfMinusOneHoldsForever(t *testing.T) {
+	anim := BGAnimation{Frames: []BGAnimFrame{
+		{Sprite: SpriteRef{Group: 5, Image: 0}, Time: 10},
+		{Sprite: SpriteRef{Group: 5, Image: 1}, Time: -1},
+	}}
+	for _, tc := range []struct{ ticks, image int }{{0, 0}, {9, 0}, {10, 1}, {50, 1}, {10000, 1}} {
+		if got := ResolveAnimationFrame(anim, tc.ticks); got != (SpriteRef{Group: 5, Image: tc.image}) {
+			t.Errorf("tick %d: %+v, want 5,%d", tc.ticks, got, tc.image)
+		}
+	}
+	static := BGAnimation{Frames: []BGAnimFrame{
+		{Sprite: SpriteRef{Group: 1, Image: 0}, Time: 0},
+		{Sprite: SpriteRef{Group: 1, Image: 1}, Time: -1},
+	}}
+	if got := ResolveAnimationFrame(static, 0); got != (SpriteRef{Group: 1, Image: 1}) {
+		t.Errorf("static -1 animation: %+v, want 1,1 shown at once", got)
+	}
+}
+
 func TestResolveAnimationFrame_ReturnsBlankSentinelWhenEveryFrameHasNoDuration(t *testing.T) {
 	anim := BGAnimation{Frames: []BGAnimFrame{
 		{Sprite: SpriteRef{Group: 1, Image: 0}, Time: 0},
-		{Sprite: SpriteRef{Group: 1, Image: 1}, Time: -1},
+		{Sprite: SpriteRef{Group: 1, Image: 1}, Time: 0},
 	}}
 
 	got := ResolveAnimationFrame(anim, 0)

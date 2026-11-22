@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-11-22
+
+### Fixed
+- A background animation whose last frame has time -1 plays its timed frames once and then holds that last frame, as in Ikemen GO, instead of showing nothing.
+- A `Loopstart` after an action's last frame no longer makes the animation invisible: it falls back to the earlier loop start, as Ikemen GO does.
+- Clsn, Interpolate and other lines not starting with a digit inside `[Begin Action]` are skipped as Ikemen GO skips them, instead of failing the whole stage; `Loopstart:` is recognized.
+
 ## [0.18.1] - 2026-11-22
 
 ### Fixed
