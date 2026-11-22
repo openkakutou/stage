@@ -418,7 +418,9 @@ bgmusic = ../../stages/Guilty Gear Xrd - Neo New York/theme.ogg
 	}
 }
 
-func TestParse_EmptyInput_ReturnsZeroValueStageAndNoError(t *testing.T) {
+// An empty file still gets Ikemen GO's camera and bound defaults
+// (camera.go:79, 88; stage.go:1147-1148), everything else stays zero.
+func TestParse_EmptyInput_ReturnsIkemenGODefaultsAndNoError(t *testing.T) {
 	s, err := Parse(strings.NewReader(""))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -426,8 +428,9 @@ func TestParse_EmptyInput_ReturnsZeroValueStageAndNoError(t *testing.T) {
 	if s.Elements != nil {
 		t.Errorf("expected nil Elements, got %v", s.Elements)
 	}
-	if s.BGdef != (BGdef{}) || s.CameraBounds != (CameraBounds{}) || s.StageBoundaries != (StageBoundaries{}) {
-		t.Errorf("expected a zero-value Stage, got %+v", s)
+	wantBGdef := BGdef{LocalCoordWidth: 320, LocalCoordHeight: 240, ZoomOut: 1, ZoomIn: 1}
+	if s.BGdef != wantBGdef || s.CameraBounds != (CameraBounds{}) || s.StageBoundaries != (StageBoundaries{Left: -1000, Right: 1000}) {
+		t.Errorf("expected Ikemen GO's defaults only, got %+v", s)
 	}
 }
 

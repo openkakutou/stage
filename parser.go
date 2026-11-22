@@ -66,6 +66,11 @@ func Parse(r io.Reader) (Stage, error) {
 	scanner := bufio.NewScanner(r)
 
 	var stage Stage
+	// Ikemen GO's newCamera (camera.go:79, 88) and newStage
+	// (stage.go:1147-1148) defaults, whether or not the section exists.
+	stage.BGdef.LocalCoordWidth, stage.BGdef.LocalCoordHeight = 320, 240
+	stage.BGdef.ZoomOut, stage.BGdef.ZoomIn = 1, 1
+	stage.StageBoundaries.Left, stage.StageBoundaries.Right = -1000, 1000
 	var elements []BGElement
 	var current *BGElement
 	var currentSection string
@@ -123,7 +128,7 @@ func Parse(r io.Reader) (Stage, error) {
 			raw := strings.TrimSpace(line[1 : len(line)-1])
 			if name, ok := bgElementName(raw); ok {
 				// Ikemen GO's newBackGround defaults (stage.go:176-181).
-				current = &BGElement{Name: name, ScaleStartX: 1, ScaleStartY: 1, XScaleTop: 1, XScaleBottom: 1}
+				current = &BGElement{Name: name, DeltaX: 1, DeltaY: 1, ScaleStartX: 1, ScaleStartY: 1, XScaleTop: 1, XScaleBottom: 1}
 				currentSection = "bg"
 				continue
 			}

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 ---
 # Stage defaults as Ikemen GO sets them
 
@@ -11,5 +11,8 @@ Found by the audit of 2026-11-21 (high; `delta` checked against stage.go:176). A
 🔒 MUST: Ikemen GO behaviour (roadmap decision `038`).
 
 ## Acceptance Criteria
-- [ ] Each default above is applied when its section starts, citing its Ikemen GO line
-- [ ] A stage without these keys parses to Ikemen GO's values, and a save does not write a 0 the source never had
+- [x] Each default above is applied when its section starts, citing its Ikemen GO line
+- [x] A stage without these keys parses to Ikemen GO's values, and a save does not write a 0 the source never had
+
+## Done
+2026-11-22 - v0.18.1: the camera and bound defaults are set when `Parse` starts (Ikemen GO sets them whether or not the section exists), `delta` with the other `newBackGround` defaults (`ikemen_defaults_test.go`). The empty-input test now expects those defaults.

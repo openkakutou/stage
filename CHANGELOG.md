@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-11-22
+
+### Fixed
+- Keys a stage omits take Ikemen GO's defaults instead of 0: `localcoord` 320,240, `zoomout` and `zoomin` 1, `leftbound`/`rightbound` -1000/1000, and a BG element's `delta` 1,1. A layer without `delta` now scrolls with the camera, and saving such a stage no longer writes `localcoord = 0,0`, `zoomout = 0` or `delta = 0,0` into it.
+
 ## [0.18.0] - 2026-11-21
 
 ### Added
